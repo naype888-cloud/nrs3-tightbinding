@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RS^N³ · Modelo 3D</title>
+<meta name="theme-color" content="#06080b">
+<link rel="icon" href="media/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="shared/css/tokens.css">
+<link rel="stylesheet" href="shared/css/landing.css?v=20261112">
+<link rel="stylesheet" href="shared/css/tabla.css?v=20261112">
+</head>
+<body class="landing visor">
+<header class="barra">
+  <a class="regresar" id="regresar" href="index.html#tabla-sec">← Regresar</a>
+  <a id="ant" href="#" aria-label="Elemento anterior">‹</a>
+  <span class="quien" id="quien" aria-live="polite"></span>
+  <a id="sig" href="#" aria-label="Elemento siguiente">›</a>
+</header>
+<iframe id="modelo" title="Modelo 3D del elemento" allowfullscreen></iframe>
+<script src="data/elementos.js?v=20261112"></script>
+<script>
+(function () {
+  "use strict";
+  var D = window.ELEMENTOS || [];
+  var z = parseInt(new URLSearchParams(location.search).get("z"), 10);
+  var e = D.filter(function (x) { return x.z === z; })[0];
+  var quien = document.getElementById("quien");
+  if (!e) {
+    quien.textContent = "Elemento no disponible";
+    return;
+  }
+  document.title = "RS^N³ · " + e.nombre + " (Z=" + e.z + ")";
+  quien.innerHTML = "<b>" + e.sim + "</b>" + e.nombre + " · Z=" + e.z;
+  document.getElementById("modelo").src = "modelos/" + e.archivo;
+  function enlace(id, otro) {
+    var a = document.getElementById(id);
+    if (otro) { a.href = "ver.html?z=" + otro.z; a.title = otro.nombre; }
+    else { a.setAttribute("aria-disabled", "true"); a.removeAttribute("href"); }
+  }
+  enlace("ant", D.filter(function (x) { return x.z === z - 1; })[0]);
+  enlace("sig", D.filter(function (x) { return x.z === z + 1; })[0]);
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") location.href = "index.html#tabla-sec";
+  });
+})();
+</script>
+</body>
+</html>

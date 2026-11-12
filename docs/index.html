@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RS^N³ · Tight-binding</title>
+<meta name="description" content="La tabla periódica de RS^N³: un cubo tight-binding en Z³ por cada elemento. Clic en un elemento para abrir su modelo 3D.">
+<meta name="theme-color" content="#06080b">
+<link rel="icon" href="media/favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RS^N³ · Tight-binding">
+<meta property="og:title" content="RS^N³ · Tight-binding — la tabla periódica en cubos">
+<meta property="og:description" content="Un cubo tight-binding en Z³ por cada elemento, de H a Og. Clic en la tabla para abrir el modelo 3D.">
+<meta property="og:url" content="https://naype888-cloud.github.io/nrs3-tightbinding/">
+<link rel="preload" href="media/fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="shared/css/tokens.css">
+<link rel="stylesheet" href="shared/css/landing.css?v=20261112">
+<link rel="stylesheet" href="shared/css/tabla.css?v=20261112">
+</head>
+<body class="landing">
+<main class="tabla-stage">
+  <header>
+    <p class="kicker">Mecánica cuántica · Lean 4 · Mathlib</p>
+    <h1>RS<sup>N</sup>³<br>Tight-binding</h1>
+    <p class="sub">La tabla periódica, un cubo por elemento</p>
+    <div class="rule" aria-hidden="true"><span></span></div>
+    <p class="nota">Cada elemento es el hidrógeno más <b>Z − 1</b> electrones sobre el cubo entero ℤ³: el único
+      movimiento es el paso de eje (<b>T<sub>d</sub> : P<sub>d</sub></b>), el hopping del tight-binding.
+      <b>Haz clic en un elemento</b> para abrir su modelo 3D; allí, <b>Regresar</b> te trae de vuelta a la tabla.
+      Los slots 3s–7p y las orientaciones d y f son convención de dibujo, no resultado del corpus.</p>
+  </header>
+
+  <section id="tabla-sec" aria-label="Tabla periódica">
+    <div class="tabla" id="tabla" role="group" aria-label="Elementos 1 a 118"></div>
+    <p class="leyenda" id="leyenda" aria-live="polite"></p>
+  </section>
+
+  <nav class="doors" aria-label="Otras páginas">
+    <a class="door" href="https://naype888-cloud.github.io/nrs3-hidrogeno/">
+      <span class="k">Hidrógeno</span>
+      <span class="t">El átomo en enteros</span>
+      <span class="d">Hardy discreto 1/4, cierre en d ≤ 3 y la esfera de Bloch del núcleo.</span>
+      <span class="go" aria-hidden="true"></span>
+    </a>
+    <a class="door" href="https://naype888-cloud.github.io/nrs3-cristales/">
+      <span class="k">Cristales</span>
+      <span class="t">Redes y palabras de eje</span>
+      <span class="d">Bravais y tight-binding sobre el mismo cubo RS<sup>N</sup>³.</span>
+      <span class="go" aria-hidden="true"></span>
+    </a>
+    <a class="door" href="https://naype888-cloud.github.io/BACQM-NRS3/">
+      <span class="k">Corpus</span>
+      <span class="t">BACQM · NRS³</span>
+      <span class="d">La cadena formal completa en Lean 4, 0 sorry.</span>
+      <span class="go" aria-hidden="true"></span>
+    </a>
+  </nav>
+</main>
+<script src="data/elementos.js?v=20261112"></script>
+<script src="shared/js/tabla.js?v=20261112" defer></script>
+</body>
+</html>
