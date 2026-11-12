@@ -5,7 +5,7 @@
 **La tabla periódica, un cubo por elemento.**
 
 <a href="https://naype888-cloud.github.io/nrs3-tightbinding/">
-  <img src="docs/media/clip.gif" alt="La tabla periódica de 118 elementos; un clic abre el modelo 3D del hierro, el hidrógeno y el oganesón" width="860">
+  <img src="docs/media/clip.gif" alt="La tabla periódica de 118 elementos; un clic abre el modelo 3D del hierro, el uranio, el hidrógeno y el oganesón" width="860">
 </a>
 
 <p>
