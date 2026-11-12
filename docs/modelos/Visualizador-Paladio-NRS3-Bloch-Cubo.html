@@ -3232,8 +3232,14 @@
       if (activeIndices.length <= 10) {
         const activeSites = electronObjects.filter(e => e.data.active).map(e => (e === obj ? next : [...e.currentPos]));
         const nextDet = computeSlaterDet(activeSites);
-        if (Math.abs(nextDet) < 1e-12) acceptHop = false;
-        else currentSlaterDet = nextDet;
+        if (Math.abs(nextDet) < 1e-12) {
+          // Solo se rechaza un salto que ROMPE un estado no degenerado. Si el determinante ya era 0
+          // (p. ej. Mg, Z=12: 12 sitios con orbitales de caja simetricos), no hay estado que proteger:
+          // rechazar todo congelaba a todos los electrones (0 de 3000 saltos aceptados, 11-12).
+          const curDet = computeSlaterDet(electronObjects.filter(e => e.data.active).map(e => [...e.currentPos]));
+          if (Math.abs(curDet) >= 1e-12) acceptHop = false;
+          else currentSlaterDet = nextDet;
+        } else currentSlaterDet = nextDet;
       } else {
         // En atomos multielectronicos grandes (como Og Z=118), det(118x118) sufre underflow matematico (< 1e-35).
         // La exclusion de Pauli la sella isTargetOccupied. Validamos amplitud local:
