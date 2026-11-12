@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "Si usas esta tabla o sus modelos, cítalos así."
+title: "RS^N³ · Tight-binding: la tabla periódica, un cubo por elemento"
+type: software
+authors:
+  - family-names: "Nava Hernandez"
+    given-names: "Eduardo"
+    alias: "naype888-cloud"
+repository-code: "https://github.com/naype888-cloud/nrs3-tightbinding"
+url: "https://naype888-cloud.github.io/nrs3-tightbinding/"
+abstract: "Los 118 elementos (H a Og) como hidrógeno más Z-1 electrones sobre el cubo entero Z^3, con un modelo 3D interactivo por elemento."
+keywords:
+  - tight-binding
+  - periodic table
+  - lean4
+  - quantum mechanics
+  - visualization
+date-released: "2026-11-12"

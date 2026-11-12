@@ -6,9 +6,16 @@
   var tabla = document.getElementById("tabla");
   if (!tabla) return;
 
+  // Bloque orbital por posición en la tabla: s (grupos 1-2 y He), p (13-18), d (3-12), f (filas aparte).
+  function bloque(e) {
+    if (e.fila >= 9) return "f";
+    if (e.col <= 2 || e.z === 2) return "s";
+    return e.col >= 13 ? "p" : "d";
+  }
+
   function celda(e) {
     var a = document.createElement("a");
-    a.className = "el";
+    a.className = "el b-" + bloque(e);
     a.href = "ver.html?z=" + e.z;
     a.style.gridRow = e.fila > 7 ? e.fila + 1 : e.fila;
     a.style.gridColumn = e.col;
@@ -37,5 +44,8 @@
   DATOS.forEach(function (e) { tabla.appendChild(celda(e)); });
 
   var ley = document.getElementById("leyenda");
-  if (ley) ley.textContent = DATOS.length + " elementos · clic para abrir el modelo 3D";
+  if (ley) {
+    ley.innerHTML = '<span><i class="s"></i>s</span><span><i class="p"></i>p</span><span><i class="d"></i>d</span>' +
+      '<span><i class="f"></i>f</span><span class="fin">' + DATOS.length + " elementos · clic para abrir el modelo 3D</span>";
+  }
 })();
