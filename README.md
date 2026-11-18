@@ -1,265 +1,233 @@
 <div align="center">
 
-# RS<sup>N</sup>³ · Open Cube & Tight-Binding
-### Modèle de Liaison Forte sur le Réseau Discret ℤ³ et Formalisation de la Table Périodique
-#### *Fondé sur les PRs fusionnées dans Physlib #1725 et #2096 : l'opérateur de saut axial engendre la structure de graphe chemin, l'Open Cube NRS³, la saturation exacte en d ≤ 3 et la stabilité des 118 éléments.*
+# RS<sup>N</sup>³ · La chaîne de liaisons fortes et le cube ouvert
+### De la chaîne périodique de Physlib au cube ouvert : bords ouverts, saturation de Robertson–Schrödinger en N = 2, 3 et borne de Szegő — et la table périodique dessinée sur ℤ³
 
 **Eduardo Nava Hernández**  
-*Formalisation formelle certifiée en Lean 4 · 0 sorry · Mathlib · Physlib (#1725, #2096)*
+*Vérification formelle en Lean 4 · 0 sorry · Physlib (PhyslibAlpha)*
 
 [![Lean 4](https://img.shields.io/badge/Lean_4-v4.35.0-blue.svg?style=flat-square)](https://leanprover.github.io/)
 [![Mathlib](https://img.shields.io/badge/Mathlib-v%C3%A9rifi%C3%A9-2ea44f.svg?style=flat-square)](https://github.com/leanprover-community/mathlib4)
-[![Kernel Status](https://img.shields.io/badge/Kernel-0%20sorry%20%7C%20Certifi%C3%A9-brightgreen.svg?style=flat-square)]()
-[![Physlib #1725](https://img.shields.io/badge/Physlib-PR_%231725_Merged-7c5cd6.svg?style=flat-square)](https://github.com/leanprover-community/physlib/pull/1725)
-[![Physlib #2096](https://img.shields.io/badge/Physlib-PR_%232096_Merged-7c5cd6.svg?style=flat-square)](https://github.com/leanprover-community/physlib/pull/2096)
-[![Simulador 3D](https://img.shields.io/badge/Simulador_3D-118_Elementos-00e5ff.svg?style=for-the-badge&logo=three.js)](https://naype888-cloud.github.io/nrs3-tightbinding/)
-[![Sin Red](https://img.shields.io/badge/Modelos-100%25_Autocontenidos-2f8f5b.svg?style=flat-square)]()
+[![Kernel Status](https://img.shields.io/badge/Kernel-0%20sorry-brightgreen.svg?style=flat-square)]()
+[![Physlib](https://img.shields.io/badge/Physlib-PRs%20fusionn%C3%A9es-7c5cd6.svg?style=flat-square)](https://github.com/leanprover-community/physlib/pulls?q=is%3Apr+is%3Amerged+author%3Anaype888-cloud)
+[![Table périodique](https://img.shields.io/badge/Table_p%C3%A9riodique-118_mod%C3%A8les_3D-00e5ff.svg?style=for-the-badge&logo=three.js)](https://naype888-cloud.github.io/nrs3-tightbinding/)
 
 <br>
 
 <a href="https://naype888-cloud.github.io/nrs3-tightbinding/">
-  <img src="docs/media/clip.gif" alt="La tabla periódica de 118 elementos sobre el cubo discreto ℤ³; un clic abre el modelo 3D del hierro, uranio, hidrógeno y oganesón" width="860">
+  <img src="docs/media/clip.gif" alt="La table périodique de 118 éléments ; un clic ouvre le modèle 3D du fer, de l’uranium, de l’hydrogène et de l’oganesson" width="860">
 </a>
 
 <p>
-  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/"><b>▶ Abrir la tabla</b></a> ·
-  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/ver.html?z=1">Hidrógeno (Z = 1)</a> ·
-  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/ver.html?z=26">Hierro (Z = 26)</a> ·
-  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/ver.html?z=92">Uranio (Z = 92)</a> ·
-  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/ver.html?z=118">Oganesón (Z = 118)</a>
+  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/"><b>▶ Ouvrir la table</b></a> ·
+  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/ver.html?z=1">Hydrogène (Z = 1)</a> ·
+  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/ver.html?z=26">Fer (Z = 26)</a> ·
+  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/ver.html?z=92">Uranium (Z = 92)</a> ·
+  <a href="https://naype888-cloud.github.io/nrs3-tightbinding/ver.html?z=118">Oganesson (Z = 118)</a>
 </p>
 
 </div>
 
 ---
 
-> ### 🏛️ Marco Fundamental: El Open Cube NRS³ y la Cadena de Grafo Camino
+> ### 🏛️ Le module maître : de la chaîne de Physlib au cube ouvert
 >
-> ```text
-> ⟨m | H_open | n⟩ = E₀ · I_mn − t · A(P_N)_mn                   (Physlib #2096)
-> centeredGramDefect_alongX(ψ_max) = 0  ⟺  N_X ≤ 3               (Physlib #1725)
-> |det Ω| < det Σ  sur tout le cube ouvert 4 × 4 × 4             (Physlib #1725)
-> ```
+> La chaîne de liaisons fortes de Physlib (`TightBindingChain`, fichier `Basic.lean`) est un anneau de N sites. En retirant le seul lien de la couture, entre le site 0 et le site N − 1, on obtient la chaîne ouverte : c’est elle qui porte l’opérateur position et la relation énergie–position.
 >
-> **L'Open Cube NRS³** (Nava–Robertson–Schrödinger sur le cube ouvert à trois axes orthogonaux, fusionné dans Physlib #1725) établit que le système tridimensionnel `Tx ⊗ Ty ⊗ Tz` commute identiquement entre axes distincts (`[O_X, O_Y] = 0`). Le Hamiltonien ouvert est exactement le saut sur le graphe chemin `SimpleGraph.pathGraph N` (Physlib #2096). Sur la cellule élémentaire `d ≤ 3`, le défaut de Gram s'annule identiquement ; dès la dimension `4 × 4 × 4`, la relation de Robertson devient strictement dispersive, stabilisant les couches électroniques des 118 éléments sans divergence ultraviolette.
+> <div align="center">
+> <img src="assets/plaque_tb_maitresse.png" alt="Plaque maîtresse : chaîne de Physlib, bords ouverts, saturation dans l’état de courant maximal, constante C_N et cube ouvert" width="860">
+> </div>
+>
+> **1 · La chaîne de Physlib.** H a pour états propres les ondes planes |k⟩, d’énergie E(k) = E₀ − 2t cos(ka).
+>
+> **2 · Bords ouverts.** H_ouv = H + t(|0⟩⟨N−1| + |N−1⟩⟨0|) : l’anneau moins la couture, c’est-à-dire E₀ fois l’identité moins t fois la matrice d’adjacence du graphe chemin P_N.
+>
+> **3 · Saturation.** Dans l’état de courant maximal, la relation de Robertson–Schrödinger entre H et X est une égalité si et seulement si N = 2 ou N = 3 ; elle est stricte dès N ≥ 4.
+>
+> **4 · La constante C_N et le cube.** C_N est strictement croissante dès N ≥ 4 et reste sous √(π²/3 − 2) ; sur le cube ouvert, det Σ = (C_Nx · C_Ny · C_Nz)² · |det Ω|, strict dès 4 × 4 × 4.
 
 ---
 
-## 🔬 Résumé / Abstract Formal
+## ⚡ Résumé formel
 
-La formalisation certifiée en Lean 4 sur Mathlib et Physlib démontre la chaîne constructive complète du retículo discreto ℤ³ :
-
-1. **La chaîne ouverte comme graphe chemin.** Le lemme maître `inner_openHamiltonian_eq_adjMatrix` (Physlib #2096) établit que les éléments matriciels du Hamiltonien de liaison forte à bords ouverts coïncident exactement avec `E₀ · I − t · A(P_N)`, reliant directement la mécanique quantique sur réseau à la théorie des graphes de Mathlib sans approximation phénoménologique.
-2. **Observable position et commutateur de saut.** L'observable position `position` engendre un corchete `inner_bracket_openHamiltonian_position_eq` dont les éléments matriciels sont nuls en dehors des premiers voisins (`|m − n| = 1`), bornant la dispersion par l'inégalité de Robertson–Schrödinger `robertson_schrodinger_openHamiltonian_position`.
-3. **Bifurcation de saturation de Szegő.** Dans l'état de courant maximal `maxCurrentState`, le défaut de Gram centré s'annule identiquement si et seulement si `N = 2` ou `N = 3` (`centeredGramDefect_maxCurrentState_eq_zero_iff`). Pour tout `N ≥ 4`, l'inégalité est strictement stricte (`robertson_schrodinger_maxCurrentState_lt`), et le ratio d'incertitude `C_N` croît de façon strictement monotone vers la limite universelle de Szegő `uncertaintyRatio_lt_sqrt_pi_sq_div_three_sub_two` (`lim C_N² = π²/3 − 2 ≈ 1.289868`).
-4. **L'Open Cube NRS³ en trois dimensions.** Sur le produit tensoriel `Tx.CubeHilbertSpace Ty Tz`, les observables d'axes distincts commutent identiquement (`bracket_alongX_alongY`). La matrice simpléctique `Ω` et la matrice de covariance `Σ` sont bloc-diagonales (`bracketMatrix_cubePairs`). Sur tout cube ouvert avec `Nx, Ny, Nz ≥ 4`, le déterminant de Robertson est strictement supérieur à 1 (`robertson_det_maxCurrentCubeState_strict`, Physlib #1725).
-5. **Réalisation physique des 118 éléments.** Le retículo entier ℤ³ fournit le substrat discret des éléments de H à Og : le core saturant `d ≤ 3` (343 sites) confine les couches internes sans potentiel ad-hoc, et les sous-couches de valence `d ≥ 4` exploitent le gap de dispersion strict.
-
----
-
-## 📐 Cadena Deductiva en 5 Etapas Constructivas
-
-### Étape 1 : Le Hamiltonien Ouvert et le Graphe Chemin (Physlib #2096)
-> **Proposition 1.1 (Hamiltonien ouvert et matrice d'adjacence).** Pour toute chaîne de liaison forte ouverte à `N` sites avec auto-énergie `E₀` et saut `t`, les éléments matriciels vérifient identiquement :
-
-```text
-⟨m | H_open | n⟩ = E₀ · I_mn − t · (adjMatrix ℝ (SimpleGraph.pathGraph T.N)) m n
-```
-
-*Modules formels :* `Physlib/CondensedMatter/TightBindingChain/Open/Basic.lean` (`inner_openHamiltonian_eq_adjMatrix`). Démonstration directe par décomposition sur la base orthonormale des états localisés `|n⟩` et identification des arêtes du graphe chemin.
+* **La chaîne.** [`Physlib/CondensedMatter/TightBindingChain/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/Physlib/CondensedMatter/TightBindingChain/Basic.lean) (Joseph Tooby-Smith) définit `TightBindingChain` (N sites, pas a, énergie de site E₀, saut t), la base orthonormée `localizedState`, le hamiltonien `hamiltonian`, la zone de Brillouin et les états propres : `hamiltonian_energyEigenstate` établit H |k⟩ = E(k) |k⟩ avec `energyEigenvalue` = E₀ − 2t cos(ka).
+* **Les bords ouverts.** [`PhyslibAlpha/…/Open/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean) importe `Basic.lean` et définit `openHamiltonian` à partir de `T.hamiltonian` ; `inner_openHamiltonian_eq_adjMatrix` l’identifie au saut sur `SimpleGraph.pathGraph`. La position `position` et `inner_commutator_position` donnent ⟨m|(AX − XA)|n⟩ = a(n − m)⟨m|A|n⟩.
+* **La relation énergie–position.** [`Open/Uncertainty.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Uncertainty.lean) : `inner_bracket_openHamiltonian_position_eq` (⁅H, X⁆ ne relie que des sites voisins) et `robertson_schrodinger_openHamiltonian_position` (Cov² + ⟨⁅H, X⁆⟩² ≤ Var H · Var X dans tout état).
+* **La saturation.** [`MaxCurrentState/Saturation.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Saturation.lean) : `centeredGramDefect_maxCurrentState_eq_zero_iff` (égalité ⟺ N = 2 ∨ N = 3) et `robertson_schrodinger_maxCurrentState_lt` (stricte dès N ≥ 4).
+* **La constante C_N.** `uncertaintyRatio` ; `uncertaintyRatio_eq_one_iff`, `uncertaintyRatio_sq_eq` (forme fermée), `uncertaintyRatio_lt_uncertaintyRatio` (croissance stricte), `uncertaintyRatio_lt_sqrt_pi_sq_div_three_sub_two` et `tendsto_uncertaintyRatio` (borne et limite de Szegő), `mandelstamTammRatio_maxCurrentState` (rapport de Mandelstam–Tamm = 1/C_N²).
+* **Le cube ouvert.** [`Cube/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Cube/Basic.lean) : `bracket_alongX_alongY`, `centeredGramDefect_alongX_eq_zero_iff`, `bracketMatrix_cubePairs`, `robertson_det_cube`, `det_covarianceMatrix_maxCurrentCubeState` et `robertson_det_maxCurrentCubeState_strict`.
 
 ---
 
-### Étape 2 : Commutateur de Position et Déplacement Discret
-> **Proposition 2.1 (Commutateur canonique de position).** L'opérateur position `X = ∑ a n |n⟩⟨n|` satisfait la relation de commutation discrète pour tout opérateur `A` :
+## 📐 Chaîne déductive en six étapes
 
-```text
-⟨m | [A, X] | n⟩ = a · (n − m) · ⟨m | A | n⟩
-```
+<div align="center">
+<img src="assets/plaque_tb_etapes.png" alt="Les six étapes : chaîne de Physlib, bords ouverts, relation énergie–position, courant maximal, constante C_N, cube ouvert" width="860">
+</div>
 
-Le corchete `⁅H, X⁆ = −(i/2) [H, X]` ne connecte que les sites immédiatement adjacents (`|m − n| = 1`), fondant l'inégalité d'incertitude locale énergie-position `Var(H) · Var(X) ≥ |⟨⁅H, X⁆⟩|²`.
+### Étape 1 : La chaîne de liaisons fortes de Physlib
 
-*Modules formels :* `PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean` (`position`, `inner_commutator_position`), `Open/Uncertainty.lean` (`inner_bracket_openHamiltonian_position_eq`, `robertson_schrodinger_openHamiltonian_position`).
+> **Proposition 1.1 (Ondes planes de l’anneau).** Sur la chaîne de N sites, où le site N est identifié au site 0, les états |k⟩ = ∑ₙ e^{ikna} |n⟩, de nombre d’onde quantifié k, sont propres pour H avec la valeur propre E(k) = E₀ − 2t cos(ka).
 
----
+<div align="center"><img src="assets/plaque_tb_etape1.png" alt="Hamiltonien de la chaîne de Physlib, ondes planes et E(k) = E0 − 2t cos(ka)" width="860"></div>
 
-### Étape 3 : État de Courant Maximal et Saturation en d ≤ 3
-> **Théorème 3.1 (Bifurcation géométrique de Robertson–Schrödinger).** Dans l'état de courant maximal `|ψ_max⟩`, le défaut de Gram centré vérifie :
-
-```text
-centeredGramDefect(ψ_max) = 0  ⟺  N = 2 ∨ N = 3
-N ≥ 4  ⟹  Var(H) · Var(X) > |⟨⁅H, X⁆⟩|²
-```
-
-Le ratio d'incertitude `C_N = √(Var(H) Var(X)) / |⟨⁅H, X⁆⟩|` vérifie `C₂ = C₃ = 1`, est strictement croissant (`C_N < C_{N+1}`) et strictement borné par la constante universelle de Szegő :
-
-```text
-C_N² < π²/3 − 2 ≈ 1.289868
-```
-
-*Modules formels :* `PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Saturation.lean` (`centeredGramDefect_maxCurrentState_eq_zero_iff`, `robertson_schrodinger_maxCurrentState_lt`), `UncertaintyRatio.lean` (`uncertaintyRatio_eq_one_iff`), `LongChainMonotonicity.lean` (`uncertaintyRatio_lt_sqrt_pi_sq_div_three_sub_two`), `MandelstamTamm.lean` (`mandelstamTammRatio_maxCurrentState`).
+*Module formel :* [`Physlib/CondensedMatter/TightBindingChain/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/Physlib/CondensedMatter/TightBindingChain/Basic.lean) (`hamiltonian`, `energyEigenstate`, `energyEigenvalue`, `hamiltonian_energyEigenstate`). Auteur : Joseph Tooby-Smith. Toutes les étapes suivantes portent sur cette structure `TightBindingChain`.
 
 ---
 
-### Étape 4 : L'Open Cube NRS³ en 3D et Rupture Stricte 4 × 4 × 4 (Physlib #1725)
-> **Théorème 4.1 (Orthogonalité inter-axes et déterminant de Robertson multidimensionnel).** Sur le cube ouvert à trois axes `Tx ⊗ Ty ⊗ Tz`, les observables d'axes distincts commutent rigoureusement :
+### Étape 2 : Les bords ouverts — l’anneau moins la couture
 
-```text
-[alongX(a), alongY(b)] = 0,    [alongX(a), alongZ(c)] = 0,    [alongY(b), alongZ(c)] = 0
-```
+> **Proposition 2.1 (Chaîne ouverte et graphe chemin).** Le hamiltonien ouvert est le hamiltonien périodique de l’étape 1 auquel on retire le saut entre les sites 0 et N − 1. Ses éléments de matrice sont E₀ fois l’identité moins t fois la matrice d’adjacence du graphe chemin P_N. L’opérateur position X = ∑ₙ a n |n⟩⟨n| vérifie ⟨m|(AX − XA)|n⟩ = a(n − m)⟨m|A|n⟩ pour tout opérateur A.
 
-Pour les 6 observables conjuguées `((H_X, X), (H_Y, Y), (H_Z, Z))`, la matrice simpléctique `Ω` et la matrice de covariance `Σ` sont bloc-diagonales `3 × 3`. Dans l'état `maxCurrentCubeState`, le déterminant satisfait :
+<div align="center"><img src="assets/plaque_tb_etape2.png" alt="Hamiltonien ouvert, matrice d’adjacence du graphe chemin et commutateur avec la position" width="860"></div>
 
-```text
-det Σ / |det Ω| = (C_Nx · C_Ny · C_Nz)²
-```
-
-Sur tout cube ouvert avec `Nx ≥ 4, Ny ≥ 4, Nz ≥ 4`, l'inégalité de Robertson est **strictement stricte** :
-
-```text
-|det Ω| < det Σ
-```
-
-*Modules formels :* `PhyslibAlpha/CondensedMatter/TightBindingChain/Cube/Basic.lean` (`bracket_alongX_alongY`, `robertson_det_cube`, `robertson_det_maxCurrentCubeState_strict`, Physlib #1725), `Cube/Hamiltonian.lean` (`cubeHamiltonian`, `inner_cubeHamiltonian_eq_adjMatrix`), `Cube/SpeedLimit.lean` (`abs_expectation_alongX_current_le`).
+*Module formel :* [`PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean) (`openHamiltonian`, `inner_openHamiltonian`, `inner_openHamiltonian_eq_adjMatrix`, `position`, `inner_commutator_position`). Démonstration : `inner_openHamiltonian` se lit sur `T.hamiltonian` de l’étape 1, puis on compare cas par cas avec l’adjacence de `SimpleGraph.pathGraph`.  
+*Physlib :* PR #1689, PR #2096.
 
 ---
 
-### Étape 5 : Réalisation Physique — La Table Périodique des 118 Éléments sur ℤ³
-> **Proposition 5.1 (Confinement du core d ≤ 3 et stabilité de valence d ≥ 4).** Chaque élément chimique Z ∈ {1, …, 118} est modélisé comme un noyau central au site `(0, 0, 0)` et Z électrons sur le retículo entier ℤ³ régis par l'opérateur de saut axial :
+### Étape 3 : La relation énergie–position
 
-1. **Core doré saturant (`d ≤ 3`):** Les 7 × 7 × 7 = 343 sites (`−3 ≤ x, y, z ≤ 3`) forment la zone où le défaut de Gram s'annule (`defectGram(d) = 0`). Aucun effondrement ultraviolet vers le noyau n'est possible.
-2. **Couches de valence (`d ≥ 4`):** Les sous-couches s, p, d et f se déploient dans la région où le déterminant de Robertson devient strictement dispersif (`|det Ω| < det Σ`), générant le plancher de cohérence cinématique borné par Szegő qui stabilise la matière.
-3. **Sphère de Bloch locale :** Chaque électron individuel visualise sa phase complexe et son courant cinétique `⟨J⟩` sans trajectoire continue classique.
+> **Proposition 3.1 (Robertson–Schrödinger pour H et X).** Le crochet ⁅H, X⁆ = −(i/2)(HX − XH) ne relie que des sites voisins, avec les éléments de matrice ± i a t/2. Dans tout état ω, Cov(H, X)² + ⟨⁅H, X⁆⟩² ≤ Var H · Var X.
 
----
+<div align="center"><img src="assets/plaque_tb_etape3.png" alt="Crochet de H et X, ses éléments de matrice, et la relation de Robertson–Schrödinger dans tout état" width="860"></div>
 
-## 🏛️ Les Fondations dans Physlib : Pull Requests Fusionnées
-
-| Étape | Fondement Mathématique | PRs Fusionnées dans Physlib | Modules Associés |
-| :---: | :--- | :--- | :--- |
-| **Étape 1** | Hamiltonien ouvert comme graphe chemin P_N | **[#2096](https://github.com/leanprover-community/physlib/pull/2096)** (`inner_openHamiltonian_eq_adjMatrix`) | `TightBindingChain.Open` |
-| **Étape 2** | Commutateur de position et incertitude H − X | **[#1723](https://github.com/leanprover-community/physlib/pull/1723)**, **[#1689](https://github.com/leanprover-community/physlib/pull/1689)** | `TightBindingChain.Open.Uncertainty` |
-| **Étape 3** | Courant maximal, saturation d ≤ 3 et cota de Szegő | **[#1716](https://github.com/leanprover-community/physlib/pull/1716)**, **[#1718](https://github.com/leanprover-community/physlib/pull/1718)**, **[#1732](https://github.com/leanprover-community/physlib/pull/1732)**, **[#1734](https://github.com/leanprover-community/physlib/pull/1734)**, **[#1735](https://github.com/leanprover-community/physlib/pull/1735)**, **[#1739](https://github.com/leanprover-community/physlib/pull/1739)** | `TightBindingChain.MaxCurrentState` |
-| **Étape 4** | L'Open Cube NRS³, commutation orthogonale et rupture 4 × 4 × 4 | **[#1725](https://github.com/leanprover-community/physlib/pull/1725)** (Open Cube NRS³), **[#1986](https://github.com/leanprover-community/physlib/pull/1986)** (commutation axiale orthogonale), **[#1987](https://github.com/leanprover-community/physlib/pull/1987)** (coordination Δ = 12) | `TightBindingChain.Cube` |
-| **Étape 5** | Réalisation physique et table périodique de 118 éléments | **[#1961](https://github.com/leanprover-community/physlib/pull/1961)** (réseaux de Bravais en dimension d) | Suite 3D 118 modèles Three.js |
+*Module formel :* [`PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Uncertainty.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Uncertainty.lean) (`inner_bracket_openHamiltonian_position_eq`, `robertson_schrodinger_openHamiltonian_position`). Démonstration : `inner_commutator_position` de l’étape 2 appliqué à H, puis la relation générale `robertson_schrodinger` de PhyslibAlpha (`ProbabilisticTheory/CStarAlgebra/Uncertainty.lean`).  
+*Physlib :* PR #1690.
 
 ---
 
-## 🔬 Catalogue des Théorèmes Vérifiés par Machine (0 sorry)
+### Étape 4 : L’état de courant maximal et la saturation en N = 2, 3
 
-| Déclaration Lean 4 | Énoncé Mathématique | Origine Formelle |
-|:---|:---|:---:|
-| `inner_openHamiltonian_eq_adjMatrix` | `⟨m\|H_open\|n⟩ = E₀ · I_mn − t · A(P_N)_mn` | Physlib #2096 |
-| `bracket_alongX_alongY` | `[alongX(a), alongY(b)] = 0` (Commutation axiale orthogonale) | Physlib #1725 / #1986 |
-| `centeredGramDefect_alongX_eq_zero_iff` | `defect_X = 0 ⟺ N_X = 2 ∨ N_X = 3` | Physlib #1725 |
-| `robertson_det_maxCurrentCubeState_strict` | `4×4×4 ⟹ \|det Ω\| < det Σ` | Physlib #1725 |
-| `inner_commutator_position` | `⟨m\|[A, X]\|n⟩ = a(n − m) ⟨m\|A\|n⟩` | PhyslibAlpha |
-| `inner_bracket_openHamiltonian_position_eq` | `⁅H, X⁆` agit strictement entre premiers voisins (`\|m − n\| = 1`) | PhyslibAlpha |
-| `robertson_schrodinger_openHamiltonian_position` | `Var(H) · Var(X) ≥ \|⟨⁅H, X⁆⟩\|²` | PhyslibAlpha |
-| `centeredGramDefect_maxCurrentState_eq_zero_iff` | `defect(ψ_max) = 0 ⟺ N ∈ {2, 3}` | PhyslibAlpha |
-| `robertson_schrodinger_maxCurrentState_lt` | `N ≥ 4 ⟹ Var(H) · Var(X) > \|⟨⁅H, X⁆⟩\|²` | PhyslibAlpha |
-| `uncertaintyRatio_eq_one_iff` | `C_N = 1 ⟺ N = 2 ∨ N = 3` | PhyslibAlpha |
-| `uncertaintyRatio_lt_uncertaintyRatio` | `N < N' ⟹ C_N < C_N'` (Monotonie de Bernstein) | PhyslibAlpha |
-| `uncertaintyRatio_lt_sqrt_pi_sq_div_three_sub_two` | `C_N² < π²/3 − 2 ≈ 1.289868` (Cote de Szegő) | PhyslibAlpha |
-| `mandelstamTammRatio_maxCurrentState` | `⟨J⟩² / (4 · Var(H) · Var(X)) = 1/C_N² ≤ 1` | PhyslibAlpha |
-| `inner_cubeHamiltonian_eq_adjMatrix` | `H_cube = E_site · I − t · Adj(P_Nx □ P_Ny □ P_Nz)` | PhyslibAlpha |
-| `bracketMatrix_cubePairs` | Matrice simpléctique `Ω` bloc-diagonale `3 × 3` | PhyslibAlpha |
-| `robertson_det_cube` | `\|det Ω\| ≤ det Σ` sur tout état du cube | PhyslibAlpha |
-| `abs_expectation_alongX_current_le` | `\|⟨J_X⟩\| ≤ 2 \|a t\| cos(π / (N_X + 1))` (Vitesse limite) | PhyslibAlpha |
+> **Proposition 4.1 (Saturation exacte).** Dans l’état de courant maximal, Cov(H, X) = 0, ⟨⁅H, X⁆⟩ = −a t cos(π/(N+1)), et Var H · Var X = (a t cos(π/(N+1)))² + centeredGramDefect. Pour t ≠ 0 et N ≥ 2, le défaut est nul si et seulement si N = 2 ou N = 3 ; dès N ≥ 4, la relation est stricte.
+
+<div align="center"><img src="assets/plaque_tb_etape4.png" alt="État de courant maximal, covariance nulle, produit des variances, saturation si et seulement si N = 2 ou 3" width="860"></div>
+
+*Modules formels :* [`MaxCurrentState/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Basic.lean) (`maxCurrentState`, `expectation_bracket_maxCurrentState`), [`MaxCurrentState/UncertaintyRatio.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/UncertaintyRatio.lean) (`covariance_maxCurrentState`, `variance_mul_variance_maxCurrentState`), [`MaxCurrentState/Saturation.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Saturation.lean) (`centeredGramDefect_maxCurrentState_eq_zero_iff`, `robertson_schrodinger_maxCurrentState_lt`). Démonstration : la relation de l’étape 3 évaluée dans l’état propre du courant `currentEigenstate`.  
+*Physlib :* PR #1708, PR #1716, PR #1718, PR #1723.
 
 ---
 
-## 🖥️ Cómo leer un modelo 3D
+### Étape 5 : La constante C_N, sa monotonie et la borne de Szegő
 
-| Lo que ves | Qué significa |
+> **Proposition 5.1 (C_N croît strictement vers √(π²/3 − 2)).** Soit C_N = √(Var H · Var X) / |a t cos(π/(N+1))| dans l’état de courant maximal. Alors C_N = 1 si et seulement si N = 2 ou N = 3 ; C_N² a une forme fermée en N ; pour 4 ≤ N < N′, C_N < C_N′ ; C_N < √(π²/3 − 2) et C_N → √(π²/3 − 2) quand N → ∞. Le rapport de Mandelstam–Tamm vaut 1/C_N².
+
+<div align="center"><img src="assets/plaque_tb_etape5.png" alt="Définition de C_N, forme fermée de C_N au carré, croissance stricte, borne et limite de Szegő, rapport de Mandelstam–Tamm" width="860"></div>
+
+*Modules formels :* [`MaxCurrentState/UncertaintyRatio.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/UncertaintyRatio.lean) (`uncertaintyRatio`, `uncertaintyRatio_eq_one_iff`), [`MaxCurrentState/Variances.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Variances.lean) (`uncertaintyRatio_sq_eq`), [`MaxCurrentState/LongChainMonotonicity.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/LongChainMonotonicity.lean) (`uncertaintyRatio_lt_uncertaintyRatio`, `uncertaintyRatio_lt_sqrt_pi_sq_div_three_sub_two`), [`MaxCurrentState/LongChainLimit.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/LongChainLimit.lean) (`tendsto_uncertaintyRatio`), [`MaxCurrentState/MandelstamTamm.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/MandelstamTamm.lean) (`mandelstamTammRatio_maxCurrentState`). Démonstration : la saturation de l’étape 4 donne C_N = 1 ; la forme fermée en θ = π/(N+1) donne la monotonie et la limite.  
+*Physlib :* PR #1723, PR #1732, PR #1734, PR #1735, PR #1739.
+
+---
+
+### Étape 6 : Le cube ouvert RS<sup>N</sup>³
+
+> **Proposition 6.1 (Robertson sur les six observables du cube).** Trois chaînes ouvertes Tx, Ty, Tz forment le cube. Les observables d’axes différents commutent, donc la matrice des crochets Ω est diagonale par blocs et (bₓ b_y b_z)² ≤ det Σ dans tout état. Dans l’état de courant maximal du cube, det Σ = (C_Nx · C_Ny · C_Nz)² · |det Ω| ; si Nx, Ny, Nz ≥ 4, alors |det Ω| < det Σ.
+
+<div align="center"><img src="assets/plaque_tb_etape6.png" alt="Commutation des axes, Ω diagonale par blocs, relation de Robertson dans tout état, det Σ égal au produit des C_N au carré fois det Ω, stricte dès 4 × 4 × 4" width="860"></div>
+
+*Module formel :* [`PhyslibAlpha/CondensedMatter/TightBindingChain/Cube/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Cube/Basic.lean) (`bracket_alongX_alongY`, `maxCurrentCubeState`, `centeredGramDefect_alongX_eq_zero_iff`, `bracketMatrix_cubePairs`, `robertson_det_cube`, `det_covarianceMatrix_maxCurrentCubeState`, `robertson_det_maxCurrentCubeState_strict`). Démonstration : chaque axe porte la constante C_N de sa propre chaîne (étape 5) ; Σ et Ω sont diagonales par blocs.  
+*Physlib :* PR #1725, PR #1742, PR #1986.
+
+---
+
+## 🔬 Tableau des contributions Physlib fusionnées
+
+| PR Physlib | Fichier d’origine (`PhyslibAlpha/…`) | Énoncé formel principal | Étape |
+|:---:|:---|:---|:---:|
+| — | `Physlib/…/TightBindingChain/Basic` | Chaîne de liaisons fortes, H \|k⟩ = E(k) \|k⟩ (Joseph Tooby-Smith) | 1 |
+| **#1689** | `TightBindingChain/OpenBoundary` | Chaîne ouverte, position, ⟨m\|[A, X]\|n⟩ = a(n − m)⟨m\|A\|n⟩ | 2 |
+| **#2096** | `TightBindingChain/Open/Basic` | La chaîne ouverte est le saut du graphe chemin | 2 |
+| **#1690** | `TightBindingChain/Uncertainty` | Relation énergie–position, ⁅H, X⁆ entre voisins | 3 |
+| **#1708** | `TightBindingChain/CurrentEigenstates` | États propres du courant | 4 |
+| **#1716** | `TightBindingChain/MaxCurrentState` | État de courant maximal, ⟨⁅H, X⁆⟩ = −a t cos(π/(N+1)) | 4 |
+| **#1718** | `TightBindingChain/Saturation` | Égalité de Robertson–Schrödinger ⟺ N = 2, 3 | 4 |
+| **#1723** | `TightBindingChain/ElementalUncertainty` | Cov = 0, Var H · Var X = (a t cos)² + défaut, C_N = 1 ⟺ N = 2, 3 | 4, 5 |
+| **#1732** | `TightBindingChain/MaxCurrentVariances` | Variances et forme fermée de C_N² | 5 |
+| **#1734** | `TightBindingChain/LongChainLimit` | C_N → √(π²/3 − 2) | 5 |
+| **#1735** | `TightBindingChain/LongChainMonotonicity` | C_N strictement croissante dès N = 4, C_N < √(π²/3 − 2) | 5 |
+| **#1739** | `TightBindingChain/MandelstamTammMaxCurrent` | Rapport de Mandelstam–Tamm = 1/C_N² | 5 |
+| **#1725** | `TightBindingChain/Cube` | Le cube ouvert, axes qui commutent, C_N par axe | 6 |
+| **#1742** | `TightBindingChain/Cube` (E–F) | Ω diagonale par blocs, det Σ = (C_Nx C_Ny C_Nz)² \|det Ω\| | 6 |
+| **#1986** | `TightBindingChain/Cube/AxisCommutation` | Deux observables du cube commutent ⟺ axes différents | 6 |
+
+Les fichiers ont depuis été regroupés en dossiers (`Open/`, `MaxCurrentState/`, `Cube/`) ; les liens des étapes pointent vers l’emplacement actuel sur `master`.
+
+---
+
+## 🧊 La table périodique sur le cube ℤ³
+
+Chacun des 118 éléments, de **H** à **Og**, est dessiné comme l’hydrogène plus Z − 1 électrons sur le **cube entier ℤ³**. Un électron ne se déplace que par pas d’axe, le saut de la chaîne de liaisons fortes. Il n’y a pas de trajectoire continue : des sites entiers, une boîte finie et un noyau au centre. Un clic sur un élément ouvre son modèle 3D ; **← Retour** (ou `Esc`) revient à la table ; **‹ ›** passe à l’élément précédent ou suivant.
+
+| Ce que l’on voit | Ce que cela signifie |
 |---|---|
-| **Caja** `n×n×n` | La red de sitios enteros donde pueden estar los electrones. Crece con Z. |
-| **Core dorado** | La zona saturante `d ≤ 3`: 343 sitios (`7×7×7`) alrededor del núcleo (`defectGram(d) = 0`). |
-| **Lóbulos de color** | Las subcapas s, p, d y f; cada capa externa se dibuja más grande. |
-| **Esfera de Bloch** | El estado de un electrón elegido, con su fase y su corriente cinemática `⟨J⟩`. |
-| **Tarjeta del núcleo** | Isótopo de referencia (A, protones, neutrones): el más abundante, o el de vida más larga. |
-| **Valencia** | Solo la capa externa; el resto es core (Fe: `4s² 3d⁶` sobre `[Ar]`). |
+| **Boîte** n × n × n | Le réseau de sites entiers où peuvent se trouver les électrons ; elle grandit avec Z. |
+| **Cœur doré** | La zone saturante d ≤ 3 : 343 sites (7 × 7 × 7) autour du noyau. |
+| **Lobes de couleur** | Les sous-couches s, p, d et f ; chaque couche externe est dessinée plus grande. |
+| **Sphère de Bloch** | L’état d’un électron choisi, avec sa phase et son courant. |
+| **Carte du noyau** | Isotope de référence (A, protons, neutrons) : le plus abondant, ou celui de plus longue vie. |
+| **Valence** | Seulement la couche externe ; le reste est le cœur (Fe : 4s² 3d⁶ sur [Ar]). |
 
-## Qué hay en el repo
+### Contenu du dépôt
 
 ```text
 docs/
-├── index.html          la tabla (118 celdas; lantánidos y actínidos en filas aparte)
-├── ver.html?z=N        visor: barra «Regresar» + el modelo del elemento N
-├── modelos/            118 HTML autocontenidos (Three.js incluido, sin red)
-├── data/elementos.js   símbolo, nombre, archivo y posición de cada Z
-└── shared/ media/      estilos, fuentes e imágenes
+├── index.html          la table (118 cases ; lanthanides et actinides sur des lignes à part)
+├── ver.html?z=N        visionneuse : barre « Retour » + le modèle de l’élément N
+├── modelos/            118 HTML autonomes (Three.js inclus, sans réseau)
+├── data/elementos.js   symbole, nom, fichier et position de chaque Z
+└── shared/ media/      styles, polices et images
 ```
 
-Para verlo en local: `python3 -m http.server -d docs 8000` y abre <http://localhost:8000>.
+En local : `python3 -m http.server -d docs 8000`, puis ouvrir <http://localhost:8000>.
 
-## De dónde salen los modelos
+### D’où viennent les modèles
 
-Una sola plantilla genera los 118 (`generar_cubo` → `canon_cuadrantes`). Cada archivo se **audita regenerándolo y comparando byte a byte**, y además se abre en Chrome headless para buscar errores de JavaScript: 118 de 118 pasan. Ningún HTML se edita a mano; si algo está mal se corrige el generador y se regenera todo.
+Un seul générateur produit les 118 modèles. Chaque fichier est **audité en le régénérant et en le comparant octet par octet**, puis ouvert dans Chrome sans interface pour chercher des erreurs JavaScript : 118 sur 118 passent. Aucun HTML n’est édité à la main ; une erreur se corrige dans le générateur, puis tout est régénéré.
 
-## Qué es convención y qué no
+### Ce qui est convention et ce qui ne l’est pas
 
-Los slots 3s–7p, la orientación de los orbitales d y f, las posiciones de los nucleones y la masa de los elementos con Z ≥ 103 son **convención de dibujo**, no resultados formales. El marco matemático (el Open Cube `RS^N³`, el paso de eje y el cierre en `d ≤ 3`) está certificado en Lean 4 sobre Mathlib y Physlib (#1725, #2096).
-
----
-
-## 🌐 Mosaico del Ecosistema naype888-cloud
-
-| Repositorio | Descripción / Tema | Enlace |
-| :--- | :--- | :---: |
-| `lean4-commits` | Registro continuo de desarrollo y verificación formal en Lean 4 | [naype888-cloud/lean4-commits](https://github.com/naype888-cloud/lean4-commits) |
-| `nava-robertson-schrodinger` | Teorema de incertitud elemental dimensional en d dimensiones | [naype888-cloud/nava-robertson-schrodinger](https://github.com/naype888-cloud/nava-robertson-schrodinger) |
-| `YM-By-Perelmans-surgery-method` | Resolución constructiva del gap de masa de Yang–Mills en dimensión 4 | [naype888-cloud/YM-By-Perelmans-surgery-method](https://github.com/naype888-cloud/YM-By-Perelmans-surgery-method) |
-| `Proper-Time-General-Relativity` | Geometría lorentziana y derivación formal del tiempo propio | [naype888-cloud/Proper-Time-General-Relativity](https://github.com/naype888-cloud/Proper-Time-General-Relativity) |
-| `Anti-Kurt-Godel-Theorem` | Formalización semántica y consistencia constructiva | [naype888-cloud/Anti-Kurt-Godel-Theorem](https://github.com/naype888-cloud/Anti-Kurt-Godel-Theorem) |
-| `nrs3-tightbinding` | El Open Cube NRS³ en ℤ³ y la tabla periódica de 118 elementos | [naype888-cloud/nrs3-tightbinding](https://github.com/naype888-cloud/nrs3-tightbinding) |
-| `nrs3-cristales` | Redes cristalinas tridimensionales y bandas de energía | [naype888-cloud/nrs3-cristales](https://github.com/naype888-cloud/nrs3-cristales) |
-| `bacqm-systems` | Núcleo de integración, autómatas formales y certificación | [naype888-cloud/bacqm-systems](https://github.com/naype888-cloud/bacqm-systems) |
+Les créneaux 3s–7p, l’orientation des orbitales d et f, la position des nucléons et la masse des éléments Z ≥ 103 sont des **conventions de dessin**, pas des résultats formels. Le cadre mathématique — la chaîne, les bords ouverts, la saturation en N = 2, 3 et le cube ouvert — est celui des six étapes ci-dessus, certifié en Lean 4 dans Physlib.
 
 ---
 
-## 🛠️ Instructions de Compilation et Certification Kernel
+## 🏛️ La mosaïque des dépôts
+
+| Dépôt | Objet |
+|:---|:---|
+| [**Physlib : PRs fusionnées**](https://github.com/leanprover-community/physlib/pulls?q=is%3Apr+is%3Amerged+author%3Anaype888-cloud) | Tous les résultats de la chaîne et du cube intégrés en amont |
+| [`nava-robertson-schrodinger`](https://github.com/naype888-cloud/nava-robertson-schrodinger) | Incertitude élémentaire dimensionnelle : le cube NRS³ et la monotonie de C_N |
+| [`nrs3-cube`](https://github.com/naype888-cloud/nrs3-cube) | Le cube ouvert de trois graphes chemins et ses PRs Physlib |
+| [`nrs3-hidrogeno`](https://github.com/naype888-cloud/nrs3-hidrogeno) | L’atome d’hydrogène sur les sites entiers du cube |
+| [`nrs3-cristales`](https://github.com/naype888-cloud/nrs3-cristales) | Réseaux cristallins : la symétrie fixe la forme de Σ et Ω |
+| [`nrs3-mandelstam-tamm-cramer-rao`](https://github.com/naype888-cloud/nrs3-mandelstam-tamm-cramer-rao) | Borne de Mandelstam–Tamm et efficacité de Cramér–Rao |
+| [`BACQM-NRS3`](https://github.com/naype888-cloud/BACQM-NRS3) | La chaîne formelle complète |
+
+---
+
+## 🛠️ Compilation et certification
+
+Les modules vivent dans Physlib ; depuis un clone de [`leanprover-community/physlib`](https://github.com/leanprover-community/physlib) :
 
 ```bash
-# Compilation des modules de liaison forte dans Physlib
+lake exe cache get
 lake build Physlib.CondensedMatter.TightBindingChain.Basic
-
-# Compilation du cube ouvert et de la dérivation 3D
 lake build PhyslibAlpha.CondensedMatter.TightBindingChain.Cube.Basic
 ```
 
-L'ensemble des théorèmes est vérifié sous la base axiomatique standard du noyau Lean 4 :
-
-```text
-[propext, Classical.choice, Quot.sound]
-```
-
-**0 `sorry`**, aucun axiome ad hoc, vérifié formellement avec le compilateur officiel.
+* **0 `sorry`** et aucun `axiom` propre dans `TightBindingChain/` (Physlib et PhyslibAlpha), compilés par l’intégration continue de Physlib.
 
 ---
 
-## 📜 Licencia y Citación
+## 📜 Licence et citation
 
-Distribuido bajo licencia [NRS Noncommercial License 1.0.0](LICENSE). Para citar este repositorio:
-
-```bibtex
-@software{nava_hernandez_2026_tightbinding,
-  author       = {Nava-Hernández, Eduardo},
-  title        = {{RS^N³ · Open Cube & Tight-binding: la tabla periódica, un cubo por elemento}},
-  month        = nov,
-  year         = 2026,
-  publisher    = {GitHub},
-  journal      = {naype888-cloud/nrs3-tightbinding},
-  url          = {https://github.com/naype888-cloud/nrs3-tightbinding}
-}
-```
+[NRS Noncommercial License 1.0.0](LICENSE). Pour citer ce dépôt, GitHub propose **Cite this repository** dans la barre latérale (fichier [CITATION.cff](CITATION.cff)).
 
 ---
 
 <div align="center">
 
-### 🌌 *«Un electrón solo se desplaza por pasos de eje; en el Open Cube ℤ³, la saturación de Robertson en d ≤ 3 confina el core, y la estrictez en d ≥ 4 engendra la diversidad de la materia.»*
+### 📐 *« L’anneau de Physlib moins sa couture est la chaîne ouverte ; dans son état de courant maximal, Robertson–Schrödinger est une égalité en N = 2, 3 et stricte dès N = 4, sous la borne de Szegő. »*
 
-**Eduardo Nava Hernández** · naype888@gmail.com · [naype888-cloud](https://github.com/naype888-cloud)
+**Eduardo Nava Hernández** · [naype888-cloud](https://github.com/naype888-cloud)
 
 </div>
