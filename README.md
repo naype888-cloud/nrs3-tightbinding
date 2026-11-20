@@ -35,7 +35,7 @@
 > La chaîne de liaisons fortes de Physlib (`TightBindingChain`, fichier `Basic.lean`) est un anneau de N sites. En retirant le seul lien de la couture, entre le site 0 et le site N − 1, on obtient la chaîne ouverte : c’est elle qui porte l’opérateur position et la relation énergie–position.
 >
 > <div align="center">
-> <img src="assets/plaque_tb_maitresse.png" alt="Plaque maîtresse : chaîne de Physlib, bords ouverts, saturation dans l’état de courant maximal, constante C_N et cube ouvert" width="860">
+> <picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_maitresse.png"><img src="assets/claro/plaque_tb_maitresse.png" alt="Plaque maîtresse : chaîne de Physlib, bords ouverts, saturation dans l’état de courant maximal, constante C_N et cube ouvert" width="860"></picture>
 > </div>
 >
 > **1 · La chaîne de Physlib.** H a pour états propres les ondes planes |k⟩, d’énergie E(k) = E₀ − 2t cos(ka).
@@ -62,14 +62,14 @@
 ## 📐 Chaîne déductive en six étapes
 
 <div align="center">
-<img src="assets/plaque_tb_etapes.png" alt="Les six étapes : chaîne de Physlib, bords ouverts, relation énergie–position, courant maximal, constante C_N, cube ouvert" width="860">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_etapes.png"><img src="assets/claro/plaque_tb_etapes.png" alt="Les six étapes : chaîne de Physlib, bords ouverts, relation énergie–position, courant maximal, constante C_N, cube ouvert" width="860"></picture>
 </div>
 
 ### Étape 1 : La chaîne de liaisons fortes de Physlib
 
 > **Proposition 1.1 (Ondes planes de l’anneau).** Sur la chaîne de N sites, où le site N est identifié au site 0, les états |k⟩ = ∑ₙ e^{ikna} |n⟩, de nombre d’onde quantifié k, sont propres pour H avec la valeur propre E(k) = E₀ − 2t cos(ka).
 
-<div align="center"><img src="assets/plaque_tb_etape1.png" alt="Hamiltonien de la chaîne de Physlib, ondes planes et E(k) = E0 − 2t cos(ka)" width="860"></div>
+<div align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_etape1.png"><img src="assets/claro/plaque_tb_etape1.png" alt="Hamiltonien de la chaîne de Physlib, ondes planes et E(k) = E0 − 2t cos(ka)" width="860"></picture></div>
 
 *Module formel :* [`Physlib/CondensedMatter/TightBindingChain/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/Physlib/CondensedMatter/TightBindingChain/Basic.lean) (`hamiltonian`, `energyEigenstate`, `energyEigenvalue`, `hamiltonian_energyEigenstate`). Auteur : Joseph Tooby-Smith. Toutes les étapes suivantes portent sur cette structure `TightBindingChain`.
 
@@ -79,7 +79,7 @@
 
 > **Proposition 2.1 (Chaîne ouverte et graphe chemin).** Le hamiltonien ouvert est le hamiltonien périodique de l’étape 1 auquel on retire le saut entre les sites 0 et N − 1. Ses éléments de matrice sont E₀ fois l’identité moins t fois la matrice d’adjacence du graphe chemin P_N. L’opérateur position X = ∑ₙ a n |n⟩⟨n| vérifie ⟨m|(AX − XA)|n⟩ = a(n − m)⟨m|A|n⟩ pour tout opérateur A.
 
-<div align="center"><img src="assets/plaque_tb_etape2.png" alt="Hamiltonien ouvert, matrice d’adjacence du graphe chemin et commutateur avec la position" width="860"></div>
+<div align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_etape2.png"><img src="assets/claro/plaque_tb_etape2.png" alt="Hamiltonien ouvert, matrice d’adjacence du graphe chemin et commutateur avec la position" width="860"></picture></div>
 
 *Module formel :* [`PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean) (`openHamiltonian`, `inner_openHamiltonian`, `inner_openHamiltonian_eq_adjMatrix`, `position`, `inner_commutator_position`). Démonstration : `inner_openHamiltonian` se lit sur `T.hamiltonian` de l’étape 1, puis on compare cas par cas avec l’adjacence de `SimpleGraph.pathGraph`.  
 *Physlib :* PR #1689, PR #2096.
@@ -90,7 +90,7 @@
 
 > **Proposition 3.1 (Robertson–Schrödinger pour H et X).** Le crochet ⁅H, X⁆ = −(i/2)(HX − XH) ne relie que des sites voisins, avec les éléments de matrice ± i a t/2. Dans tout état ω, Cov(H, X)² + ⟨⁅H, X⁆⟩² ≤ Var H · Var X.
 
-<div align="center"><img src="assets/plaque_tb_etape3.png" alt="Crochet de H et X, ses éléments de matrice, et la relation de Robertson–Schrödinger dans tout état" width="860"></div>
+<div align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_etape3.png"><img src="assets/claro/plaque_tb_etape3.png" alt="Crochet de H et X, ses éléments de matrice, et la relation de Robertson–Schrödinger dans tout état" width="860"></picture></div>
 
 *Module formel :* [`PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Uncertainty.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Uncertainty.lean) (`inner_bracket_openHamiltonian_position_eq`, `robertson_schrodinger_openHamiltonian_position`). Démonstration : `inner_commutator_position` de l’étape 2 appliqué à H, puis la relation générale `robertson_schrodinger` de PhyslibAlpha (`ProbabilisticTheory/CStarAlgebra/Uncertainty.lean`).  
 *Physlib :* PR #1690.
@@ -101,7 +101,7 @@
 
 > **Proposition 4.1 (Saturation exacte).** Dans l’état de courant maximal, Cov(H, X) = 0, ⟨⁅H, X⁆⟩ = −a t cos(π/(N+1)), et Var H · Var X = (a t cos(π/(N+1)))² + centeredGramDefect. Pour t ≠ 0 et N ≥ 2, le défaut est nul si et seulement si N = 2 ou N = 3 ; dès N ≥ 4, la relation est stricte.
 
-<div align="center"><img src="assets/plaque_tb_etape4.png" alt="État de courant maximal, covariance nulle, produit des variances, saturation si et seulement si N = 2 ou 3" width="860"></div>
+<div align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_etape4.png"><img src="assets/claro/plaque_tb_etape4.png" alt="État de courant maximal, covariance nulle, produit des variances, saturation si et seulement si N = 2 ou 3" width="860"></picture></div>
 
 *Modules formels :* [`MaxCurrentState/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Basic.lean) (`maxCurrentState`, `expectation_bracket_maxCurrentState`), [`MaxCurrentState/UncertaintyRatio.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/UncertaintyRatio.lean) (`covariance_maxCurrentState`, `variance_mul_variance_maxCurrentState`), [`MaxCurrentState/Saturation.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Saturation.lean) (`centeredGramDefect_maxCurrentState_eq_zero_iff`, `robertson_schrodinger_maxCurrentState_lt`). Démonstration : la relation de l’étape 3 évaluée dans l’état propre du courant `currentEigenstate`.  
 *Physlib :* PR #1708, PR #1716, PR #1718, PR #1723.
@@ -112,7 +112,7 @@
 
 > **Proposition 5.1 (C_N croît strictement vers √(π²/3 − 2)).** Soit C_N = √(Var H · Var X) / |a t cos(π/(N+1))| dans l’état de courant maximal. Alors C_N = 1 si et seulement si N = 2 ou N = 3 ; C_N² a une forme fermée en N ; pour 4 ≤ N < N′, C_N < C_N′ ; C_N < √(π²/3 − 2) et C_N → √(π²/3 − 2) quand N → ∞. Le rapport de Mandelstam–Tamm vaut 1/C_N².
 
-<div align="center"><img src="assets/plaque_tb_etape5.png" alt="Définition de C_N, forme fermée de C_N au carré, croissance stricte, borne et limite de Szegő, rapport de Mandelstam–Tamm" width="860"></div>
+<div align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_etape5.png"><img src="assets/claro/plaque_tb_etape5.png" alt="Définition de C_N, forme fermée de C_N au carré, croissance stricte, borne et limite de Szegő, rapport de Mandelstam–Tamm" width="860"></picture></div>
 
 *Modules formels :* [`MaxCurrentState/UncertaintyRatio.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/UncertaintyRatio.lean) (`uncertaintyRatio`, `uncertaintyRatio_eq_one_iff`), [`MaxCurrentState/Variances.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Variances.lean) (`uncertaintyRatio_sq_eq`), [`MaxCurrentState/LongChainMonotonicity.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/LongChainMonotonicity.lean) (`uncertaintyRatio_lt_uncertaintyRatio`, `uncertaintyRatio_lt_sqrt_pi_sq_div_three_sub_two`), [`MaxCurrentState/LongChainLimit.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/LongChainLimit.lean) (`tendsto_uncertaintyRatio`), [`MaxCurrentState/MandelstamTamm.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/MandelstamTamm.lean) (`mandelstamTammRatio_maxCurrentState`). Démonstration : la saturation de l’étape 4 donne C_N = 1 ; la forme fermée en θ = π/(N+1) donne la monotonie et la limite.  
 *Physlib :* PR #1723, PR #1732, PR #1734, PR #1735, PR #1739.
@@ -123,7 +123,7 @@
 
 > **Proposition 6.1 (Robertson sur les six observables du cube).** Trois chaînes ouvertes Tx, Ty, Tz forment le cube. Les observables d’axes différents commutent, donc la matrice des crochets Ω est diagonale par blocs et (bₓ b_y b_z)² ≤ det Σ dans tout état. Dans l’état de courant maximal du cube, det Σ = (C_Nx · C_Ny · C_Nz)² · |det Ω| ; si Nx, Ny, Nz ≥ 4, alors |det Ω| < det Σ.
 
-<div align="center"><img src="assets/plaque_tb_etape6.png" alt="Commutation des axes, Ω diagonale par blocs, relation de Robertson dans tout état, det Σ égal au produit des C_N au carré fois det Ω, stricte dès 4 × 4 × 4" width="860"></div>
+<div align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_etape6.png"><img src="assets/claro/plaque_tb_etape6.png" alt="Commutation des axes, Ω diagonale par blocs, relation de Robertson dans tout état, det Σ égal au produit des C_N au carré fois det Ω, stricte dès 4 × 4 × 4" width="860"></picture></div>
 
 *Module formel :* [`PhyslibAlpha/CondensedMatter/TightBindingChain/Cube/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Cube/Basic.lean) (`bracket_alongX_alongY`, `maxCurrentCubeState`, `centeredGramDefect_alongX_eq_zero_iff`, `bracketMatrix_cubePairs`, `robertson_det_cube`, `det_covarianceMatrix_maxCurrentCubeState`, `robertson_det_maxCurrentCubeState_strict`). Démonstration : chaque axe porte la constante C_N de sa propre chaîne (étape 5) ; Σ et Ω sont diagonales par blocs.  
 *Physlib :* PR #1725, PR #1742, PR #1986.
