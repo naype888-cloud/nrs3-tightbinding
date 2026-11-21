@@ -51,6 +51,7 @@
 ## ⚡ Résumé formel
 
 * **La chaîne.** [`Physlib/CondensedMatter/TightBindingChain/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/Physlib/CondensedMatter/TightBindingChain/Basic.lean) (Joseph Tooby-Smith) définit `TightBindingChain` (N sites, pas a, énergie de site E₀, saut t), la base orthonormée `localizedState`, le hamiltonien `hamiltonian`, la zone de Brillouin et les états propres : `hamiltonian_energyEigenstate` établit H |k⟩ = E(k) |k⟩ avec `energyEigenvalue` = E₀ − 2t cos(ka).
+* **Le cristal périodique fini.** [`PhyslibAlpha/…/Bloch/TightBindingChain.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/Bloch/TightBindingChain.lean) : avec une orbitale par maille, `hoppingMatrix` vaut `E₀` sur le site et `−t` vers chacun des deux voisins, et `hopping_hoppingMatrix` montre que le hamiltonien de la chaîne est l'opérateur de saut du cristal périodique fini de Physlib (réseaux de Bravais).
 * **Les bords ouverts.** [`PhyslibAlpha/…/Open/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean) importe `Basic.lean` et définit `openHamiltonian` à partir de `T.hamiltonian` ; `inner_openHamiltonian_eq_adjMatrix` l’identifie au saut sur `SimpleGraph.pathGraph`. La position `position` et `inner_commutator_position` donnent ⟨m|(AX − XA)|n⟩ = a(n − m)⟨m|A|n⟩.
 * **La relation énergie–position.** [`Open/Uncertainty.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Uncertainty.lean) : `inner_bracket_openHamiltonian_position_eq` (⁅H, X⁆ ne relie que des sites voisins) et `robertson_schrodinger_openHamiltonian_position` (Cov² + ⟨⁅H, X⁆⟩² ≤ Var H · Var X dans tout état).
 * **La saturation.** [`MaxCurrentState/Saturation.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Saturation.lean) : `centeredGramDefect_maxCurrentState_eq_zero_iff` (égalité ⟺ N = 2 ∨ N = 3) et `robertson_schrodinger_maxCurrentState_lt` (stricte dès N ≥ 4).
@@ -72,6 +73,11 @@
 <div align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_tb_etape1.png"><img src="assets/claro/plaque_tb_etape1.png" alt="Hamiltonien de la chaîne de Physlib, ondes planes et E(k) = E0 − 2t cos(ka)" width="860"></picture></div>
 
 *Module formel :* [`Physlib/CondensedMatter/TightBindingChain/Basic.lean`](https://github.com/leanprover-community/physlib/blob/master/Physlib/CondensedMatter/TightBindingChain/Basic.lean) (`hamiltonian`, `energyEigenstate`, `energyEigenvalue`, `hamiltonian_energyEigenstate`). Auteur : Joseph Tooby-Smith. Toutes les étapes suivantes portent sur cette structure `TightBindingChain`.
+
+> **Proposition 1.2 (La chaîne est un cristal périodique fini).** Avec une orbitale par maille, la matrice de saut vaut E₀ sur le site lui-même et −t vers chacun de ses deux voisins ; dans les coordonnées ⟨n|ψ⟩, le hamiltonien de la chaîne est l'opérateur de saut du cristal périodique fini défini par ces matrices. C'est le pont entre la chaîne de liaisons fortes et les réseaux cristallins de Physlib.
+
+*Module formel :* [`PhyslibAlpha/CondensedMatter/Bloch/TightBindingChain.lean`](https://github.com/leanprover-community/physlib/blob/master/PhyslibAlpha/CondensedMatter/Bloch/TightBindingChain.lean) (`hoppingMatrix`, `hopping_hoppingMatrix`).  
+*Physlib :* PR #2118.
 
 ---
 
@@ -135,6 +141,7 @@
 | PR Physlib | Fichier d’origine (`PhyslibAlpha/…`) | Énoncé formel principal | Étape |
 |:---:|:---|:---|:---:|
 | — | `Physlib/…/TightBindingChain/Basic` | Chaîne de liaisons fortes, H \|k⟩ = E(k) \|k⟩ (Joseph Tooby-Smith) | 1 |
+| **#2118** | `Bloch/TightBindingChain` | La chaîne est un cristal périodique fini, une orbitale par maille | 1 |
 | **#1689** | `TightBindingChain/OpenBoundary` | Chaîne ouverte, position, ⟨m\|[A, X]\|n⟩ = a(n − m)⟨m\|A\|n⟩ | 2 |
 | **#2096** | `TightBindingChain/Open/Basic` | La chaîne ouverte est le saut du graphe chemin | 2 |
 | **#1690** | `TightBindingChain/Uncertainty` | Relation énergie–position, ⁅H, X⁆ entre voisins | 3 |
@@ -151,6 +158,28 @@
 | **#1986** | `TightBindingChain/Cube/AxisCommutation` | Deux observables du cube commutent ⟺ axes différents | 6 |
 
 Les fichiers ont depuis été regroupés en dossiers (`Open/`, `MaxCurrentState/`, `Cube/`) ; les liens des étapes pointent vers l’emplacement actuel sur `master`.
+
+---
+
+## 📚 Catalogue des modules Lean
+
+Les modules vivent dans Physlib (`master`) ; ce dépôt n'a pas de code Lean propre.
+
+| Module | Théorème principal | Signification | `sorry` |
+|:---|:---|:---|:---:|
+| `Physlib/CondensedMatter/TightBindingChain/Basic.lean` | `hamiltonian_energyEigenstate` | `H \|k⟩ = E(k) \|k⟩`, `E(k) = E₀ − 2t cos(ka)` | 0 |
+| `PhyslibAlpha/CondensedMatter/Bloch/TightBindingChain.lean` | `hopping_hoppingMatrix` | La chaîne est un cristal périodique fini | 0 |
+| `PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean` | `inner_openHamiltonian_eq_adjMatrix` | Chaîne ouverte = saut du graphe chemin | 0 |
+| `PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Uncertainty.lean` | `robertson_schrodinger_openHamiltonian_position` | Robertson–Schrödinger pour H et X | 0 |
+| `PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/Saturation.lean` | `centeredGramDefect_maxCurrentState_eq_zero_iff` | Égalité ⟺ N = 2, 3 | 0 |
+| `PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/LongChainMonotonicity.lean` | `uncertaintyRatio_lt_uncertaintyRatio` | C_N strictement croissante dès N = 4 | 0 |
+| `PhyslibAlpha/CondensedMatter/TightBindingChain/MaxCurrentState/LongChainLimit.lean` | `tendsto_uncertaintyRatio` | C_N → √(π²/3 − 2) | 0 |
+| `PhyslibAlpha/CondensedMatter/TightBindingChain/Cube/Basic.lean` | `robertson_det_maxCurrentCubeState_strict` | Robertson strict sur le cube dès 4 × 4 × 4 | 0 |
+
+### Portée
+
+* La chaîne est unidimensionnelle avec une orbitale par maille ; le cube est le produit de trois chaînes ouvertes.
+* La table périodique ci-dessous est une visualisation : les positions des orbitales sont une convention, pas un théorème.
 
 ---
 
@@ -204,6 +233,17 @@ Les créneaux 3s–7p, l’orientation des orbitales d et f, la position des nuc
 
 ---
 
+## ⏱️ Chronologie
+
+| Année | Résultat | Étape |
+|:---:|:---|:---:|
+| **1928** | Bloch : les électrons dans un réseau cristallin, ondes de Bloch | 1 |
+| **1929** | Robertson : l'inégalité d'incertitude pour deux observables | 3 |
+| **1930** | Schrödinger : le terme de covariance | 3, 4 |
+| **1945** | Mandelstam–Tamm : la relation temps–énergie | 5 |
+
+---
+
 ## 🛠️ Compilation et certification
 
 Les modules vivent dans Physlib ; depuis un clone de [`leanprover-community/physlib`](https://github.com/leanprover-community/physlib) :
@@ -215,6 +255,11 @@ lake build PhyslibAlpha.CondensedMatter.TightBindingChain.Cube.Basic
 ```
 
 * **0 `sorry`** et aucun `axiom` propre dans `TightBindingChain/` (Physlib et PhyslibAlpha), compilés par l’intégration continue de Physlib.
+* `#print axioms` sur les huit théorèmes du catalogue : ils ne dépendent que de
+
+```text
+[propext, Classical.choice, Quot.sound]
+```
 
 ---
 
