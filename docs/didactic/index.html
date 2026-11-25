@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Didáctica — RS^N³ · Tight-binding</title>
+<meta name="description" content="Del ladrillo 1×1×1 al Open Cube y la Tabla Periódica en ℤ³: por qué (0..3)³ satura, por qué (4,4,4) abre el espectro, y la compresión 90:10.">
+<link rel="icon" href="../media/favicon.svg" type="image/svg+xml">
+<script src="../shared/js/theme.js?v=20261125" data-toggle></script>
+<link rel="stylesheet" href="../shared/css/tokens.css?v=20261125">
+<link rel="stylesheet" href="../shared/css/tabla.css?v=20261125">
+<style>
+  main.doc { max-width: 920px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font: 400 clamp(2.1rem, 4.8vw, 3.3rem)/1.06 var(--serif); margin: 8px 0 10px; }
+  h2 { font: 400 1.6rem/1.2 var(--serif); margin: 30px 0 8px; }
+  .step { border: 1px solid var(--line); border-left: 3px solid var(--blue); border-radius: 12px; padding: 14px 16px; margin: 14px 0; background: var(--panel); }
+  .step.warm { border-left-color: var(--warm); }
+  .step.gold { border-left-color: var(--gold); }
+  .step .k { font: 11px/1 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .12em; }
+  .step h2 { margin: 6px 0 8px; }
+  p { max-width: 72ch; color: var(--ink2); line-height: 1.6; }
+  .pager { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); font: 13px/1 var(--mono); }
+</style>
+</head>
+<body class="landing">
+<nav class="topbar" aria-label="Sitio">
+  <a class="brand" href="../">RS<sup>N</sup>³ · Tight-binding<span> · Didáctica</span></a>
+  <a class="pill" href="../">Tabla</a>
+  <a class="pill" href="./" aria-current="page">Didáctica</a>
+  <a class="pill" href="../formal/">Formal</a>
+  <a class="pill" href="../lab/">Laboratorio</a>
+  <button class="pill" id="theme" type="button">☀ Claro</button>
+</nav>
+
+<main class="doc">
+  <p class="kicker">6 pasos sin saltos lógicos</p>
+  <h1>Del ladrillo elemental al Open Cube</h1>
+  <p>Por qué el mismo cubo es el primer ladrillo y todo el universo, por qué los orbitales arrancan en <code>(4,4,4)</code> y cómo cabe un átomo en <code>1:1</code>.</p>
+
+  <section class="step">
+    <div class="k">Paso 1 · PR #2118</div>
+    <h2>1 celda = 1 orbital</h2>
+    <p>Cada celda del cristal lleva un único orbital (<code>Matrix (Fin 1) (Fin 1) ℂ</code>): energía <code>E₀</code> en el propio sitio y amplitud <code>−t</code> hacia el vecino inmediato. No hay subestructuras ocultas dentro de la celda.</p>
+  </section>
+
+  <section class="step warm">
+    <div class="k">Paso 2 · PR #2096</div>
+    <h2>Solamente Open Cube desde (0,0,0) en +/+/+</h2>
+    <p>Al abrir el borde entre el sitio <code>N − 1</code> y <code>0</code> queda el grafo camino <code>P<sub>N</sub></code>. En 3D, las tres cadenas ortogonales forman el cubo abierto <code>Fin N<sub>x</sub> × Fin N<sub>y</sub> × Fin N<sub>z</sub></code> anclado en la esquina <code>(0,0,0)</code> y creciendo en <code>+/+/+ → ∞</code>.</p>
+  </section>
+
+  <section class="step gold">
+    <div class="k">Paso 3 · Saturación d ≤ 3</div>
+    <h2>Del (0,0,0) al (3,3,3) satura; la Bola de Bloch d=2 vive ahí</h2>
+    <p>Para <code>d ≤ 3</code> el álgebra de conmutadores cierra (<code>cierra d ↔ d ≤ 3</code>) y <code>C<sub>2</sub> = C<sub>3</sub> = 1</code>. La Esfera de Bloch <code>d=2</code> queda anclada en <code>(0,0,0)</code> sobre el primer paso de cinemática imaginaria <code>[T, P]</code>. Los ejes con coordenada <code>0</code> conmutan (<code>0=0</code>).</p>
+  </section>
+
+  <section class="step warm">
+    <div class="k">Paso 4 · PR #2122 & Cube</div>
+    <h2>En (4,4,4) se abre el primer orbital y la banda de velocidad</h2>
+    <p>Desde <code>(4,4,4)</code> el álgebra deja de cerrar (<code>C<sub>4</sub> &gt; 1</code>, umbral de velocidad <code>≥ 3/2 |at|</code>). Cada nivel siguiente —<code>(5,5,5)</code>, <code>(6,6,6)</code>…— añade una capa de estados propios abiertos y todo su espectro en <code>+/+/+</code>.</p>
+  </section>
+
+  <section class="step">
+    <div class="k">Paso 5 · Bravais = Espectro</div>
+    <h2>Las redes de Bravais son el espectro completo del cubo</h2>
+    <p>Cada paso de un sitio a otro en el espacio euclídeo 3D entra como parte imaginaria <code>i Ω</code> de la matriz de incertidumbre. Sus palabras de pasos de eje sobre <code>ℤ³</code> (PR #1987) generan las 14 redes cristalinas de Bravais: la simetría fija los ceros de <code>Σ</code> y <code>Ω</code>, y el espectro fija el tamaño.</p>
+  </section>
+
+  <section class="step">
+    <div class="k">Paso 6 · Escala funcional 90:10</div>
+    <h2>Comprimir 90% del vacío para graficar 1:1</h2>
+    <p>En escala física real casi todo el átomo es vacío. Al comprimir <b>90:10</b> ese vacío en la representación gráfica funcional, la red entera desde <code>(0..3)³</code> hasta <code>(k,k,k)</code> se dibuja <b>1:1</b> en celdas enteras sin perder las coordenadas reales de Lean.</p>
+  </section>
+
+  <nav class="pager">
+    <a href="../">← Volver a la Tabla</a>
+    <a href="../formal/">Nota Formal (Lean 4) →</a>
+  </nav>
+</main>
+</body>
+</html>

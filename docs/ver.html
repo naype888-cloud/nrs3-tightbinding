@@ -3,47 +3,180 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RS^N³ · Modelo 3D</title>
+<title>RS^N³ · Open Cube</title>
 <meta name="theme-color" content="#06080b">
 <link rel="icon" href="media/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="shared/css/tokens.css">
-<link rel="stylesheet" href="shared/css/landing.css?v=20261112">
-<link rel="stylesheet" href="shared/css/tabla.css?v=20261112">
+<link rel="preload" href="media/fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="shared/js/theme.js?v=20261125" data-toggle></script>
+<link rel="stylesheet" href="shared/css/tokens.css?v=20261125">
+<link rel="stylesheet" href="shared/css/visor.css?v=20261125">
 </head>
-<body class="landing visor">
+<body class="visor-app">
 <header class="barra">
-  <a class="regresar" id="regresar" href="index.html#tabla-sec">← Regresar</a>
+  <a class="regresar" href="index.html#tabla-sec">← Tabla</a>
   <a id="ant" href="#" aria-label="Elemento anterior">‹</a>
-  <span class="quien" id="quien" aria-live="polite"></span>
+  <span class="quien" id="quien" aria-live="polite">Cargando…</span>
   <a id="sig" href="#" aria-label="Elemento siguiente">›</a>
+  <button id="btn-panel" type="button">Panel</button>
+  <button id="theme" type="button">☀ Claro</button>
 </header>
-<iframe id="modelo" title="Modelo 3D del elemento" allowfullscreen></iframe>
-<script src="data/elementos.js?v=20261112"></script>
-<script>
-(function () {
-  "use strict";
-  var D = window.ELEMENTOS || [];
-  var z = parseInt(new URLSearchParams(location.search).get("z"), 10);
-  var e = D.filter(function (x) { return x.z === z; })[0];
-  var quien = document.getElementById("quien");
-  if (!e) {
-    quien.textContent = "Elemento no disponible";
-    return;
-  }
-  document.title = "RS^N³ · " + e.nombre + " (Z=" + e.z + ")";
-  quien.innerHTML = "<b>" + e.sim + "</b>" + e.nombre + " · Z=" + e.z;
-  document.getElementById("modelo").src = "modelos/" + e.archivo;
-  function enlace(id, otro) {
-    var a = document.getElementById(id);
-    if (otro) { a.href = "ver.html?z=" + otro.z; a.title = otro.nombre; }
-    else { a.setAttribute("aria-disabled", "true"); a.removeAttribute("href"); }
-  }
-  enlace("ant", D.filter(function (x) { return x.z === z - 1; })[0]);
-  enlace("sig", D.filter(function (x) { return x.z === z + 1; })[0]);
-  document.addEventListener("keydown", function (ev) {
-    if (ev.key === "Escape") location.href = "index.html#tabla-sec";
-  });
-})();
-</script>
+
+<div class="visor-workspace" id="workspace">
+  <aside class="side-panel" aria-label="Controles del Open Cube">
+    <div class="panel-head">
+      <div class="badge-row">
+        <span class="vbadge warm" id="badge-elem">—</span>
+        <span class="vbadge blue" id="badge-cube">—</span>
+        <span class="vbadge violet" id="badge-bravais">—</span>
+      </div>
+      <h1 class="el-h1" id="el-title">—</h1>
+      <p class="el-sub" id="el-sub">—</p>
+    </div>
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-b on" type="button" data-tab="t-cubo">1. +/+/+</button>
+      <button class="tab-b" type="button" data-tab="t-spec">2. Espectro</button>
+      <button class="tab-b" type="button" data-tab="t-elec">3. Electrones</button>
+      <button class="tab-b" type="button" data-tab="t-bloch">4. Bloch & ℤ³</button>
+    </div>
+
+    <div class="panel-scroll">
+      <!-- TAB 1: OPEN CUBE +/+/+ -->
+      <div class="pane on" id="t-cubo">
+        <div class="vcard">
+          <div class="vcard-title"><span>Vistas desde (0,0,0) → +/+/+</span></div>
+          <div class="views-grid">
+            <button class="vbtn on" type="button" data-view="esquina0">01 Esquina 0</button>
+            <button class="vbtn" type="button" data-view="core">02 Core 0..3</button>
+            <button class="vbtn" type="button" data-view="diag">03 (4,4,4)+</button>
+            <button class="vbtn" type="button" data-view="xy">04 X–Y</button>
+            <button class="vbtn" type="button" data-view="xz">05 X–Z</button>
+            <button class="vbtn" type="button" data-view="iso">06 Iso +/+/+</button>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="vcard-title"><span>Core saturante ≤ (3,3,3)</span><span class="vbadge gold">d ≤ 3</span></div>
+          <p class="vcard-desc" id="core-desc-txt"></p>
+        </div>
+
+        <div class="vcard">
+          <div class="vcard-title"><span>Orbitales ≥ (4,4,4)</span><span class="vbadge blue">PR #2118 · #2096</span></div>
+          <p class="vcard-desc" id="open-desc-txt"></p>
+        </div>
+
+        <div class="vcard">
+          <div class="vcard-title"><span>Capas del Open Cube</span></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--gold)"></span>Core saturante (0..3)³</label><input type="checkbox" id="tog-core" checked></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--blue)"></span>Marco abierto +/+/+ y (k,k,k)</label><input type="checkbox" id="tog-open" checked></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--warm)"></span>Espectro Open Cube |ψ|²</label><input type="checkbox" id="tog-spec" checked></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--green)"></span>Ejes +X,+Y,+Z y planos 0=0</label><input type="checkbox" id="tog-axes" checked></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--muted)"></span>Rejilla 0=0 (conmutación)</label><input type="checkbox" id="tog-zero" checked></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--red)"></span>Núcleo + Bloch d=2 en (0,0,0)</label><input type="checkbox" id="tog-nuc" checked></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--warm)"></span>Estelas de salto (hopping)</label><input type="checkbox" id="tog-trails" checked></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--muted)"></span>7 octantes de fluctuación (tenues)</label><input type="checkbox" id="tog-fluct"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: ESPECTRO Y BRAVAIS -->
+      <div class="pane" id="t-spec">
+        <div class="vcard">
+          <div class="vcard-title"><span>Espectro del Open Cube (PR #2096 · #2122)</span></div>
+          <p class="vcard-desc">Modos propios del grafo camino <code>P<sub>N</sub></code> en 3 ejes (<code>1 celda = 1 orbital</code>, PR #2118).</p>
+          <div class="slide-row"><div class="slide-head"><span>Modo m<sub>x</sub></span><span id="val-mx">1</span></div><input type="range" id="sl-mx" min="1" max="5" value="1"></div>
+          <div class="slide-row"><div class="slide-head"><span>Modo m<sub>y</sub></span><span id="val-my">1</span></div><input type="range" id="sl-my" min="1" max="5" value="1"></div>
+          <div class="slide-row"><div class="slide-head"><span>Modo m<sub>z</sub></span><span id="val-mz">1</span></div><input type="range" id="sl-mz" min="1" max="5" value="1"></div>
+          <div class="formula" id="spec-readout">—</div>
+        </div>
+
+        <div class="vcard">
+          <div class="vcard-title"><span>Red de Bravais del elemento</span><a id="bravais-link" href="#" target="_blank" rel="noopener">Lab Cristales ↗</a></div>
+          <p class="vcard-desc" id="bravais-txt">—</p>
+        </div>
+      </div>
+
+      <!-- TAB 3: ELECTRONES -->
+      <div class="pane" id="t-elec">
+        <div class="vcard">
+          <div class="vcard-title"><span>Hopping discreto en +/+/+</span></div>
+          <div class="btn-row">
+            <button class="vaction" id="btn-hop-toggle" type="button">⏸ Pausar</button>
+            <button class="vaction" id="btn-hop-reset" type="button">↺ Reset</button>
+          </div>
+          <div class="slide-row">
+            <div class="slide-head"><span>Frecuencia</span><span id="val-speed">120 Hz</span></div>
+            <input type="range" id="sl-speed" min="1" max="350" value="120">
+          </div>
+          <div class="btn-row" id="layer-filter-btns" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="vcard">
+          <div class="vcard-title"><span>Salto unitario manual (e seleccionado)</span></div>
+          <div class="hop-grid">
+            <button class="vaction" type="button" data-hop="0,1">+X</button>
+            <button class="vaction" type="button" data-hop="1,1">+Y</button>
+            <button class="vaction" type="button" data-hop="2,1">+Z</button>
+            <button class="vaction" type="button" data-hop="0,-1">−X</button>
+            <button class="vaction" type="button" data-hop="1,-1">−Y</button>
+            <button class="vaction" type="button" data-hop="2,-1">−Z</button>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="vcard-title"><span>Celdas ocupadas (Pauli espacial)</span></div>
+          <div class="elec-list" id="elec-list"></div>
+        </div>
+      </div>
+
+      <!-- TAB 4: BLOCH d=2 Y MÉTRICA -->
+      <div class="pane" id="t-bloch">
+        <div class="vcard">
+          <div class="vcard-title"><span>Esfera de Bloch d=2 en (0,0,0)</span></div>
+          <p class="vcard-desc"><code>ρ = ½(1 + xσ<sub>x</sub> + yσ<sub>y</sub> + zσ<sub>z</sub>)</code> · la cinemática de moverte entra por <code>y</code> (parte imaginaria <code>iΩ</code>).</p>
+          <div class="slide-row"><div class="slide-head"><span>Radio ‖v‖</span><span id="val-br">1.00</span></div><input type="range" id="sl-br" min="0" max="100" value="100"></div>
+          <div class="slide-row"><div class="slide-head"><span>Polar θ</span><span id="val-bt">90°</span></div><input type="range" id="sl-bt" min="0" max="180" value="90"></div>
+          <div class="slide-row"><div class="slide-head"><span>Fase φ</span><span id="val-bp">45°</span></div><input type="range" id="sl-bp" min="0" max="360" value="45"></div>
+        </div>
+
+        <div class="vcard">
+          <div class="vcard-title"><span>Métrica discreta en ℤ³</span></div>
+          <div class="formula" id="metric-readout">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="stage-3d" id="stage-3d">
+    <canvas id="main-canvas" aria-label="Escena 3D del Open Cube"></canvas>
+
+    <div class="bloch-pip" id="bloch-pip">
+      <div class="pip-h"><span>Bloch d=2 · (0,0,0)</span><button id="bloch-min" type="button" title="Minimizar">_</button></div>
+      <div class="bloch-body">
+        <canvas id="bloch-canvas" width="240" height="145"></canvas>
+        <div class="bloch-stats" id="bloch-stats"></div>
+      </div>
+    </div>
+
+    <div class="legend-box-wrap" id="legend-wrap">
+      <div class="legend-head" id="legend-toggle"><span>Leyenda <span id="legend-count"></span></span><span>▾</span></div>
+      <div class="legend-list" id="legend-list"></div>
+    </div>
+
+    <div class="scale-pill">Vacío comprimido <b>90:10</b> → grilla <b>1:1</b> en <b>+/+/+</b> · solo Open Cube</div>
+  </main>
+</div>
+
+<footer class="bottom-bar" aria-label="Telemetría Open Cube">
+  <div class="bstat"><div class="k">Open Cube</div><div class="v blue" id="stat-cubo">—</div></div>
+  <div class="bstat"><div class="k">Core Saturante</div><div class="v gold" id="stat-core">—</div></div>
+  <div class="bstat"><div class="k">Orbitales ≥ 4</div><div class="v warm" id="stat-orb">—</div></div>
+  <div class="bstat"><div class="k">Incertidumbre Cube</div><div class="v violet" id="stat-cn">—</div></div>
+  <div class="bstat"><div class="k">Dist. Mín. e⁻–e⁻</div><div class="v green" id="stat-dmin">—</div></div>
+  <div class="bstat"><div class="k">Electrones Activos</div><div class="v" id="stat-elec">—</div></div>
+</footer>
+
+<script src="shared/js/three.min.js?v=20261125"></script>
+<script src="data/elementos.js?v=20261125"></script>
+<script src="shared/js/visor-cubo.js?v=20261125"></script>
 </body>
 </html>

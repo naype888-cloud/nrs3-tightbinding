@@ -3,40 +3,85 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RS^N³ · Tight-binding</title>
-<meta name="description" content="La tabla periódica de RS^N³: un cubo tight-binding en Z³ por cada elemento. Clic en un elemento para abrir su modelo 3D.">
+<title>RS^N³ · Tight-binding — Open Cube y Tabla Periódica</title>
+<meta name="description" content="La tabla periódica en el Open Cube RS^N³: 1 celda por orbital (PR #2118), core saturante ≤ (3,3,3), orbitales desde (4,4,4) en +/+/+, redes de Bravais como espectro del cubo y compresión de vacío 90:10 → 1:1.">
 <meta name="theme-color" content="#06080b">
 <link rel="icon" href="media/favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="RS^N³ · Tight-binding">
-<meta property="og:title" content="RS^N³ · Tight-binding — la tabla periódica en cubos">
-<meta property="og:description" content="Un cubo tight-binding en Z³ por cada elemento, de H a Og. Clic en la tabla para abrir el modelo 3D.">
+<meta property="og:title" content="RS^N³ · Tight-binding — Open Cube en ℤ³">
+<meta property="og:description" content="Un Open Cube desde (0,0,0) en +/+/+ por cada elemento (H–Og), 1 celda por orbital y espectro de Bravais.">
 <meta property="og:url" content="https://naype888-cloud.github.io/nrs3-tightbinding/">
 <meta property="og:image" content="https://naype888-cloud.github.io/nrs3-tightbinding/media/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="media/fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="shared/css/tokens.css">
-<link rel="stylesheet" href="shared/css/landing.css?v=20261112">
-<link rel="stylesheet" href="shared/css/tabla.css?v=20261112">
+<script src="shared/js/theme.js?v=20261125" data-toggle></script>
+<link rel="stylesheet" href="shared/css/tokens.css?v=20261125">
+<link rel="stylesheet" href="shared/css/tabla.css?v=20261125">
 </head>
 <body class="landing">
+<nav class="topbar" aria-label="Sitio">
+  <a class="brand" href="./">RS<sup>N</sup>³ · Tight-binding<span> · Open Cube</span></a>
+  <a class="pill" href="./" aria-current="page">Tabla</a>
+  <a class="pill" href="didactic/">Didáctica</a>
+  <a class="pill" href="formal/">Formal</a>
+  <a class="pill" href="lab/">Laboratorio</a>
+  <button class="pill" id="theme" type="button">☀ Claro</button>
+</nav>
+
 <main class="tabla-stage">
-  <header>
-    <div class="copy-a">
-    <p class="kicker">Mecánica cuántica · Lean 4 · Mathlib</p>
-    <h1>RS<sup>N</sup>³<br>Tight-binding</h1>
-    <p class="sub">La tabla periódica, un cubo por elemento</p>
-    <div class="rule" aria-hidden="true"><span></span></div>
+  <section class="tabla-hero" aria-label="Resumen">
+    <div>
+      <p class="kicker">Incertidumbre cinemática 3D · Lean 4 · Physlib</p>
+      <h1>RS<sup>N</sup>³ · Tight-binding</h1>
+      <p class="sub">El mismo cubo es el primer ladrillo y todo el universo</p>
+      <div class="rule" aria-hidden="true"><span></span></div>
+      <p class="nota">
+        Sobre el <b>Open Cube</b> (<code>Fin N<sub>x</sub> × Fin N<sub>y</sub> × Fin N<sub>z</sub></code> desde
+        <code>(0,0,0)</code> en <b>+/+/+</b>, 1 celda por orbital, PR #2118 y #2096), los sitios <b>0..3</b> saturan;
+        el primer orbital no saturante abre en <b>(4,4,4)</b> (PR #2122), seguido de <b>(5,5,5)</b>, <b>(6,6,6)</b>…
+        y su espectro completo. Comprimiendo el <b>90% del vacío (90:10)</b>, el átomo entero se dibuja <b>1:1</b> en ℤ³;
+        las redes de <b>Bravais</b> son el espectro completo del cubo.
+      </p>
+      <div class="hero-ticker" id="hero-ticker" aria-live="polite"></div>
     </div>
-    <div class="copy-b">
-    <p class="nota">Cada elemento es el hidrógeno más <b>Z − 1</b> electrones sobre el cubo entero ℤ³: el único
-      movimiento es el paso de eje (<b>T<sub>d</sub> : P<sub>d</sub></b>), el hopping del tight-binding.
-      <b>Haz clic en un elemento</b> para abrir su modelo 3D; allí, <b>Regresar</b> te trae de vuelta a la tabla.
-      Los slots 3s–7p y las orientaciones d y f son convención de dibujo, no resultado del corpus.</p>
+
+    <figure class="mini-scene">
+      <canvas id="mini-cube" aria-label="Open Cube en +/+/+: núcleo y bloque saturante (0..3)³ en dorado, primer orbital en (4,4,4) y capas (5,5,5), (6,6,6) abiertas hacia el infinito"></canvas>
+      <div class="mini-top"><span><b>+/+/+</b> desde (0,0,0)</span><span>1 celda = 1 orbital</span></div>
+      <figcaption><span>≤ (3,3,3) satura · ≥ (4,4,4) abre</span><span class="hot">90:10 → 1:1 · arrastra</span></figcaption>
+    </figure>
+  </section>
+
+  <section class="controles-tabla" aria-label="Filtros e inspector">
+    <div class="filtros-card">
+      <div class="filtros-row">
+        <input class="search-in" id="q-elem" type="search" placeholder="Buscar Z, símbolo, nombre o config (pulsa /)..." aria-label="Buscar elemento">
+        <select class="sel-bravais" id="sel-bravais" aria-label="Filtrar por red cristalina de Bravais">
+          <option value="all">Todas las redes Bravais</option>
+        </select>
+      </div>
+      <div class="filtros-row" role="group" aria-label="Filtrar por bloque orbital">
+        <button class="chip-btn on" type="button" data-block="all">Todos (118)</button>
+        <button class="chip-btn" type="button" data-block="s">Bloque s</button>
+        <button class="chip-btn" type="button" data-block="p">Bloque p</button>
+        <button class="chip-btn" type="button" data-block="d">Bloque d</button>
+        <button class="chip-btn" type="button" data-block="f">Bloque f</button>
+      </div>
     </div>
-  </header>
+
+    <div class="inspector-card" id="inspector" aria-live="polite">
+      <div class="insp-sym" id="insp-sym"><span class="iz">Z=26</span><span class="is">Fe</span></div>
+      <div class="insp-info">
+        <div class="insp-title" id="insp-name"><strong>Hierro</strong></div>
+        <div class="insp-meta" id="insp-meta"></div>
+      </div>
+      <div class="insp-cta">
+        <a class="pill on" id="insp-open" href="ver.html?z=26">Abrir cubo 3D →</a>
+        <a class="pill" id="insp-crystal" href="https://naype888-cloud.github.io/nrs3-cristales/lab/">Red en Cristales ↗</a>
+      </div>
+    </div>
+  </section>
 
   <section id="tabla-sec" aria-label="Tabla periódica">
     <div class="tabla" id="tabla" role="group" aria-label="Elementos 1 a 118"></div>
@@ -44,27 +89,27 @@
   </section>
 
   <nav class="doors" aria-label="Otras páginas">
-    <a class="door" href="https://naype888-cloud.github.io/nrs3-hidrogeno/">
-      <span class="k">Hidrógeno</span>
-      <span class="t">El átomo en enteros</span>
-      <span class="d">Hardy discreto 1/4, cierre en d ≤ 3 y la esfera de Bloch del núcleo.</span>
+    <a class="door" href="didactic/">
+      <span class="k">Didáctica</span>
+      <span class="t">Del ladrillo 1×1×1 al Open Cube</span>
+      <span class="d">Por qué (0..3)³ satura, por qué (4,4,4) abre el espectro y cómo 90:10 lleva el átomo a 1:1.</span>
       <span class="go" aria-hidden="true"></span>
     </a>
-    <a class="door" href="https://naype888-cloud.github.io/nrs3-cristales/">
-      <span class="k">Cristales</span>
-      <span class="t">Redes y palabras de eje</span>
-      <span class="d">Bravais y tight-binding sobre el mismo cubo RS<sup>N</sup>³.</span>
+    <a class="door" href="formal/">
+      <span class="k">Formal</span>
+      <span class="t">Teoremas en Lean 4 (PR #2096, #2118, #2122)</span>
+      <span class="d">Libro de lemas en Physlib/PhyslibAlpha, 0 sorry, y frontera exacta entre prueba y convención.</span>
       <span class="go" aria-hidden="true"></span>
     </a>
-    <a class="door" href="https://naype888-cloud.github.io/BACQM-NRS3/">
-      <span class="k">Corpus</span>
-      <span class="t">BACQM · NRS³</span>
-      <span class="d">La cadena formal completa en Lean 4, 0 sorry.</span>
+    <a class="door" href="lab/">
+      <span class="k">Laboratorio</span>
+      <span class="t">Espectro Open Cube, C_N y Bravais</span>
+      <span class="d">Ajusta N_x, N_y, N_z, explora modos propios del cubo abierto y la razón det Σ / |det Ω|.</span>
       <span class="go" aria-hidden="true"></span>
     </a>
   </nav>
 </main>
-<script src="data/elementos.js?v=20261112"></script>
-<script src="shared/js/tabla.js?v=20261112" defer></script>
+<script src="data/elementos.js?v=20261125"></script>
+<script src="shared/js/tabla.js?v=20261125" defer></script>
 </body>
 </html>

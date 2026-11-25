@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formal — RS^N³ · Tight-binding</title>
+<meta name="description" content="Catálogo formal en Lean 4 (Physlib y PhyslibAlpha): PR #2118, PR #2096, PR #2122, Open Cube y separación estricta entre teoremas y convenciones.">
+<link rel="icon" href="../media/favicon.svg" type="image/svg+xml">
+<script src="../shared/js/theme.js?v=20261125" data-toggle></script>
+<link rel="stylesheet" href="../shared/css/tokens.css?v=20261125">
+<link rel="stylesheet" href="../shared/css/tabla.css?v=20261125">
+<style>
+  main.doc { max-width: 1020px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font: 400 clamp(2.1rem, 4.8vw, 3.3rem)/1.06 var(--serif); margin: 8px 0 10px; }
+  h2 { font: 400 1.55rem/1.2 var(--serif); margin: 28px 0 10px; }
+  p { max-width: 74ch; color: var(--ink2); line-height: 1.6; }
+  .tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+  th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td code { overflow-wrap: anywhere; word-break: break-word; }
+  th:nth-child(1) { width: 110px; }
+  th:nth-child(2) { width: 32%; }
+  th:nth-child(3) { width: 26%; }
+  th { font: 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--panel-alt); }
+  tr:last-child td { border-bottom: 0; }
+  .chip { display: inline-block; font: 11px/1 var(--mono); padding: 3px 8px; border-radius: 999px; border: 1px solid var(--blue); color: var(--blue); }
+  .chip.conv { border-color: var(--warm); color: var(--warm); }
+  .pager { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); font: 13px/1 var(--mono); }
+</style>
+</head>
+<body class="landing">
+<nav class="topbar" aria-label="Sitio">
+  <a class="brand" href="../">RS<sup>N</sup>³ · Tight-binding<span> · Nota formal</span></a>
+  <a class="pill" href="../">Tabla</a>
+  <a class="pill" href="../didactic/">Didáctica</a>
+  <a class="pill" href="./" aria-current="page">Formal</a>
+  <a class="pill" href="../lab/">Laboratorio</a>
+  <button class="pill" id="theme" type="button">☀ Claro</button>
+</nav>
+
+<main class="doc">
+  <p class="kicker">Lean 4 · 0 sorry · axiomas [propext, Classical.choice, Quot.sound]</p>
+  <h1>Teoremas formales y frontera de convención</h1>
+  <p>Cada enunciado en la tabla inferior compila en <code>leanprover-community/physlib</code>. Lo que es convención de visualización se separa de forma explícita.</p>
+
+  <h2>1. Catálogo verificado en Physlib / PhyslibAlpha</h2>
+  <div class="tw">
+    <table>
+      <thead><tr><th>PR / Fuente</th><th>Módulo Lean</th><th>Teorema / Definición clave</th><th>Significado</th></tr></thead>
+      <tbody>
+        <tr><td><span class="chip">Physlib</span></td><td><code>Physlib/CondensedMatter/TightBindingChain/Basic.lean</code></td><td><code>hamiltonian_energyEigenstate</code></td><td>Cadena periódica de Joseph Tooby-Smith: <code>H |k⟩ = (E₀ − 2t cos(ka)) |k⟩</code>.</td></tr>
+        <tr><td><span class="chip">#2118</span></td><td><code>PhyslibAlpha/CondensedMatter/Bloch/TightBindingChain.lean</code></td><td><code>hoppingMatrix</code>, <code>hopping_hoppingMatrix</code></td><td>Puente con redes de Tom: 1 orbital por celda (<code>Matrix (Fin 1) (Fin 1) ℂ</code>).</td></tr>
+        <tr><td><span class="chip">#1987</span></td><td><code>PhyslibAlpha/CondensedMatter/Crystal/Examples/AxisStepWords.lean</code></td><td><code>AxisStepWords</code></td><td>Vecinos de FCC y BCC como palabras de pasos de eje en <code>ℤ³</code>.</td></tr>
+        <tr><td><span class="chip">#1689 · #2096</span></td><td><code>PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Basic.lean</code></td><td><code>openHamiltonian</code>, <code>inner_openHamiltonian_eq_adjMatrix</code></td><td>Cadena abierta = <code>E₀·I − t·adjMatrix(pathGraph N)</code> y operador posición <code>X</code>.</td></tr>
+        <tr><td><span class="chip">#1690</span></td><td><code>PhyslibAlpha/CondensedMatter/TightBindingChain/Open/Uncertainty.lean</code></td><td><code>inner_bracket_openHamiltonian_position_eq</code>, <code>robertson_schrodinger_openHamiltonian_position</code></td><td><code>⁅H, X⁆ = ± i a t / 2</code> entre vecinos (canal imaginario de cinemática) y cota en todo estado.</td></tr>
+        <tr><td><span class="chip">#1718 · #1723 · #1734 · #1735</span></td><td><code>MaxCurrentState/{Saturation,LongChainMonotonicity,LongChainLimit}.lean</code></td><td><code>centeredGramDefect_maxCurrentState_eq_zero_iff</code>, <code>tendsto_uncertaintyRatio</code></td><td>Saturación <code>C_N = 1 ⟺ N = 2, 3</code>; estricta desde <code>N ≥ 4</code>; <code>C_N → √(π²/3 − 2)</code>.</td></tr>
+        <tr><td><span class="chip">#1725 · #1742 · #1986</span></td><td><code>PhyslibAlpha/CondensedMatter/TightBindingChain/Cube/Basic.lean</code></td><td><code>robertson_det_maxCurrentCubeState_strict</code></td><td>Observables de ejes distintos conmutan; <code>det Σ = (C_Nx C_Ny C_Nz)² |det Ω|</code>, estricta desde <code>4×4×4</code>.</td></tr>
+        <tr><td><span class="chip">#2122</span></td><td><code>PhyslibAlpha/CondensedMatter/TightBindingChain/VelocityBand/Width.lean</code></td><td><code>three_div_two_mul_abs_le_threshold</code>, <code>maxCurrent_mem_velocityBand</code></td><td>Desde <code>N = 4</code> la banda de velocidad queda abierta; en <code>N = 4</code> el umbral es <code>≥ 3/2 |a t|</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>2. Qué es teorema en Lean y qué es convención del visor</h2>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Elemento</th><th>Estatuto</th><th>Detalle exacto</th></tr></thead>
+      <tbody>
+        <tr><td>Open Cube <code>Fin N<sub>x</sub> × Fin N<sub>y</sub> × Fin N<sub>z</sub></code>, <code>C_N</code>, <code>det Σ</code>, <code>1 celda = 1 orbital</code></td><td><span class="chip">Teorema Lean</span></td><td>Demostrado en Physlib / PhyslibAlpha sin <code>sorry</code>.</td></tr>
+        <tr><td>Cierre algebraico <code>cierra d ↔ d ≤ 3</code> y <code>BolaDeBloch</code></td><td><span class="chip">Teorema Lean</span></td><td>Formalizado en <code>nrs3-hidrogeno</code> (<code>SaturacionGeometrica.lean</code>, <code>BolaDeBloch.lean</code>).</td></tr>
+        <tr><td>Compresión de vacío <code>90:10 → 1:1</code></td><td><span class="chip conv">Representación visual</span></td><td>Proyección funcional declarada para mostrar en grilla <code>1:1</code> lo que en escala física es &gt;99% vacío.</td></tr>
+        <tr><td>Asignación multielectrónica en <code>k = 4..21</code>, isótopos <code>Z ≥ 103</code> y estructura de baja T de gases</td><td><span class="chip conv">Convención</span></td><td>Datos estándar (Madelung + 20 excepciones, CRC/NIST) y convención de llenado en <code>+/+/+</code>; no son teoremas de Lean.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="pager">
+    <a href="../didactic/">← Didáctica</a>
+    <a href="../lab/">Laboratorio interactivo →</a>
+  </nav>
+</main>
+</body>
+</html>

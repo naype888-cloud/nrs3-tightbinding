@@ -1,0 +1,774 @@
+// Visor canónico Open Cube +/+/+ (1 celda = 1 orbital, PR #2118 / #2096 / #2122, compresión 90:10 -> 1:1).
+(function () {
+  "use strict";
+
+  var DATOS = window.ELEMENTOS || [];
+  var zParam = parseInt(new URLSearchParams(location.search).get("z"), 10) || 1;
+  var elem = DATOS.filter(function (x) { return x.z === zParam; })[0];
+
+  var quien = document.getElementById("quien");
+  if (!elem) {
+    if (quien) quien.textContent = "Elemento no disponible";
+    return;
+  }
+
+  document.title = "RS^N³ · " + elem.nombre + " (Z=" + elem.z + ") · Open Cube";
+  if (quien) {
+    quien.innerHTML = "<b>" + elem.sim + "</b>" + elem.nombre + " · Z=" + elem.z +
+      "<small>Fin " + elem.cajaN + "³ (+/+/+) · " + elem.bravais.id + "</small>";
+  }
+  function setNav(id, target) {
+    var a = document.getElementById(id);
+    if (!a) return;
+    if (target) {
+      a.href = "ver.html?z=" + target.z;
+      a.title = target.nombre + " (Z=" + target.z + ")";
+    } else {
+      a.setAttribute("aria-disabled", "true");
+      a.removeAttribute("href");
+    }
+  }
+  setNav("ant", DATOS.filter(function (x) { return x.z === elem.z - 1; })[0]);
+  setNav("sig", DATOS.filter(function (x) { return x.z === elem.z + 1; })[0]);
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") location.href = "index.html#tabla-sec";
+  });
+
+  // ---- Utilidades matemáticas exactas (Lean PhyslibAlpha) ------------------
+  function calcCN(N) {
+    if (N <= 3) return 1.0;
+    var th = Math.PI / (N + 1);
+    var norm2 = (N + 1) / 2;
+    var meanX = 0, varX = 0, varH = 0;
+    var probs = [];
+    for (var n = 0; n < N; n++) {
+      var p = (2 / (N + 1)) * Math.pow(Math.sin((n + 1) * th), 2);
+      probs.push(p);
+      meanX += n * p;
+    }
+    for (var n2 = 0; n2 < N; n2++) varX += Math.pow(n2 - meanX, 2) * probs[n2];
+    for (var m = 0; m < N; m++) {
+      var sL = m > 0 ? Math.sin(m * th) : 0;
+      var sR = m + 1 < N ? Math.sin((m + 2) * th) : 0;
+      varH += (1 / norm2) * Math.pow(sL - sR, 2);
+    }
+    return Math.sqrt(varH * varX) / Math.abs(Math.cos(th));
+  }
+  var SZEGO_MAX = Math.sqrt(Math.PI * Math.PI / 3 - 2);
+
+  // ---- Poblar HUD textual por elemento (cero residuos heredados) -----------
+  var N = elem.cajaN;
+  var totalSites = N * N * N;
+  var coreSitesPos = 64; // (0..3)^3 en +/+/+
+  var freeSitesPos = totalSites - coreSitesPos;
+  var cN = calcCN(N);
+  var detRatio = Math.pow(cN, 6);
+
+  document.getElementById("badge-elem").textContent = elem.nombre.toUpperCase() + " · " + elem.sim + "-" + elem.masaA;
+  document.getElementById("badge-cube").textContent = "OPEN CUBE Fin " + N + "³ (" + totalSites + " celdas)";
+  document.getElementById("badge-bravais").textContent = "BRAVAIS " + elem.bravais.id;
+  document.getElementById("el-title").textContent = elem.nombre + " (" + elem.sim + ")";
+  document.getElementById("el-sub").textContent =
+    elem.config + " · Core " + (elem.coreSym ? "[" + elem.coreSym + "]" : "ninguno") +
+    " · Valencia " + elem.valencia + " · Red " + elem.bravais.nombre;
+
+  document.getElementById("core-desc-txt").innerHTML =
+    "En <b>+/+/+</b>, las celdas <code>0 ≤ x,y,z ≤ 3</code> (64 celdas; octante positivo del core completo de 343 en ℤ³) " +
+    "saturan Robertson–Schrödinger (<code>cierra d ↔ d ≤ 3</code>). Potencial discreto de referencia: " +
+    "<code>V(r) ~ −" + elem.z + "/r</code>. Coordenada <code>0</code> conmuta (<code>0=0</code>, no habitable por valencia).";
+
+  document.getElementById("open-desc-txt").innerHTML =
+    "El primer orbital no saturante abre en <b>(4,4,4)</b> (umbral <code>N=4</code>, PR #2122), seguido de <b>(5,5,5)</b>… hasta " +
+    (elem.kMax >= 4 ? "<b>(" + elem.kMax + "," + elem.kMax + "," + elem.kMax + ")</b>" : "el borde abierto") +
+    ". <b>1 celda = 1 orbital</b> (PR #2118). Quedan <b>" + freeSitesPos + " celdas</b> fuera de <code>(0..3)³</code>; " +
+    "vacío comprimido <b>90:10</b> para ver la grilla <b>1:1</b>.";
+
+  document.getElementById("bravais-link").href = "https://naype888-cloud.github.io/nrs3-cristales/lab/#" + elem.bravais.id;
+  document.getElementById("bravais-txt").textContent =
+    elem.bravais.id + " · " + elem.bravais.nombre + " (" + elem.bravais.fase + "). " +
+    "Las redes de Bravais son el espectro completo de pasos de eje del cubo.";
+
+  document.getElementById("stat-cubo").textContent = "Fin " + N + "³ (+/+/+)";
+  document.getElementById("stat-core").textContent = "0..3 (64 pos / 343 tot)";
+  document.getElementById("stat-orb").textContent = elem.kMax >= 4 ? "(4,4,4)→(" + elem.kMax + "," + elem.kMax + "," + elem.kMax + ")" : "(4,4,4) umbral";
+  document.getElementById("stat-cn").textContent = "C_" + N + "=" + cN.toFixed(4) + " · ΠC²=" + detRatio.toFixed(3);
+  document.getElementById("stat-elec").textContent = elem.z + " / " + elem.z;
+  document.getElementById("stat-dmin").textContent = elem.z === 1 ? "— (1 electrón)" : "≥ 1.000";
+
+  // Botones dinámicos por subcapa real de Z
+  var layerBtns = document.getElementById("layer-filter-btns");
+  function mkLayerBtn(label, key, on) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "vaction" + (on ? " on" : "");
+    b.textContent = label;
+    b.addEventListener("click", function () {
+      layerBtns.querySelectorAll(".vaction").forEach(function (x) { x.classList.remove("on"); });
+      b.classList.add("on");
+      filterElectronsBySubshell(key);
+    });
+    layerBtns.appendChild(b);
+  }
+  mkLayerBtn("Todos (" + elem.z + ")", "all", true);
+  elem.subcapas.forEach(function (sh) {
+    var cnt = elem.electrones.filter(function (e) { return e[1].indexOf(sh) === 0; }).length;
+    mkLayerBtn(sh + " (" + cnt + ")", sh, false);
+  });
+
+  // Sliders del modo (mx, my, mz) del espectro Open Cube
+  ["mx", "my", "mz"].forEach(function (id) {
+    var s = document.getElementById("sl-" + id);
+    s.max = String(N);
+    s.value = "1";
+    document.getElementById("val-" + id).textContent = "1";
+  });
+
+  // ---- Tabs y panel --------------------------------------------------------
+  document.querySelectorAll(".tab-b").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-tab");
+      document.querySelectorAll(".tab-b").forEach(function (b) { b.classList.toggle("on", b === btn); });
+      document.querySelectorAll(".pane").forEach(function (p) { p.classList.toggle("on", p.id === id); });
+    });
+  });
+
+  var workspace = document.getElementById("workspace");
+  var btnPanel = document.getElementById("btn-panel");
+  btnPanel.addEventListener("click", function () {
+    workspace.classList.toggle("panel-closed");
+    setTimeout(onResize, 20);
+  });
+
+  document.getElementById("legend-toggle").addEventListener("click", function () {
+    document.getElementById("legend-wrap").classList.toggle("collapsed");
+  });
+  document.getElementById("bloch-min").addEventListener("click", function () {
+    document.getElementById("bloch-pip").classList.toggle("min");
+  });
+
+  // ---- Escena 3D principal (Three.js, anclada en (0,0,0) -> +/+/+) ---------
+  function createSafeRenderer(cvs, opts) {
+    try {
+      var r = new THREE.WebGLRenderer(Object.assign({ canvas: cvs, antialias: true, alpha: true }, opts || {}));
+      r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      return r;
+    } catch (_err) {
+      return { setPixelRatio: function () {}, setSize: function () {}, render: function () {} };
+    }
+  }
+  var canvas = document.getElementById("main-canvas");
+  var wrap3d = document.getElementById("stage-3d");
+  var renderer = createSafeRenderer(canvas, { powerPreference: "high-performance" });
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(44, 1, 0.1, 500);
+  var controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.minDistance = 2;
+  controls.maxDistance = 160;
+
+  var ambLight = new THREE.AmbientLight(0xffffff, 0.9);
+  scene.add(ambLight);
+  var dirLight = new THREE.DirectionalLight(0x88bbee, 0.85);
+  dirLight.position.set(20, 30, 25);
+  scene.add(dirLight);
+
+  var gAxes = new THREE.Group();
+  var gZeroPlanes = new THREE.Group();
+  var gCore = new THREE.Group();
+  var gOpenBox = new THREE.Group();
+  var gSpectrum = new THREE.Group();
+  var gFluct = new THREE.Group();
+  var gNucleus = new THREE.Group();
+  var gBlochAnchor = new THREE.Group();
+  var gElectrons = new THREE.Group();
+
+  scene.add(gAxes, gZeroPlanes, gCore, gOpenBox, gSpectrum, gFluct, gNucleus, gBlochAnchor, gElectrons);
+  gFluct.visible = false; // Apagado por defecto: 7 octantes solo fluctuación
+
+  function buildAxes() {
+    var len = N + 1.6;
+    var cfg = [
+      { dir: [1, 0, 0], col: 0x5b9be6 },
+      { dir: [0, 1, 0], col: 0x4fb37d },
+      { dir: [0, 0, 1], col: 0xf08a5d }
+    ];
+    cfg.forEach(function (c) {
+      var v = new THREE.Vector3(c.dir[0], c.dir[1], c.dir[2]);
+      var pts = [new THREE.Vector3(0, 0, 0), v.clone().multiplyScalar(len)];
+      var line = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({ color: c.col, transparent: true, opacity: 0.9 })
+      );
+      gAxes.add(line);
+      var cone = new THREE.Mesh(
+        new THREE.ConeGeometry(0.14, 0.42, 12),
+        new THREE.MeshBasicMaterial({ color: c.col })
+      );
+      cone.position.copy(v.clone().multiplyScalar(len + 0.2));
+      cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v);
+      gAxes.add(cone);
+    });
+  }
+
+  function buildZeroPlanes() {
+    // Coordenada 0 en cada eje (0=0, conmuta, no habitable): rejilla tenue en +/+/+
+    var maxC = N - 1;
+    var mat = new THREE.LineBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.2 });
+    for (var i = 0; i <= maxC; i++) {
+      gZeroPlanes.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i, 0, 0), new THREE.Vector3(i, 0, maxC)]), mat));
+      gZeroPlanes.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, i), new THREE.Vector3(maxC, 0, i)]), mat));
+    }
+  }
+
+  function buildCoreSaturante() {
+    // Bloque (0,0,0)..(3,3,3) en +/+/+
+    var box = new THREE.BoxGeometry(3, 3, 3);
+    box.translate(1.5, 1.5, 1.5);
+    gCore.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(box),
+      new THREE.LineBasicMaterial({ color: 0xffc400, transparent: true, opacity: 0.78 })
+    ));
+    gCore.add(new THREE.Mesh(
+      box,
+      new THREE.MeshBasicMaterial({ color: 0xffc400, transparent: true, opacity: 0.05, depthWrite: false })
+    ));
+    // 64 sitios de [0,3]^3 (0 tenue, 1..3 dorado)
+    var ptsHab = [], ptsZero = [];
+    for (var x = 0; x <= 3; x++) for (var y = 0; y <= 3; y++) for (var z = 0; z <= 3; z++) {
+      if (x === 0 || y === 0 || z === 0) ptsZero.push(x, y, z);
+      else ptsHab.push(x, y, z);
+    }
+    var gH = new THREE.BufferGeometry();
+    gH.setAttribute("position", new THREE.Float32BufferAttribute(ptsHab, 3));
+    gCore.add(new THREE.Points(gH, new THREE.PointsMaterial({ color: 0xffc400, size: 0.14, transparent: true, opacity: 0.85 })));
+    var gZ = new THREE.BufferGeometry();
+    gZ.setAttribute("position", new THREE.Float32BufferAttribute(ptsZero, 3));
+    gCore.add(new THREE.Points(gZ, new THREE.PointsMaterial({ color: 0x8a8985, size: 0.08, transparent: true, opacity: 0.4 })));
+  }
+
+  function buildOpenCubeFrame() {
+    // Marco abierto desde (0,0,0) hacia +/+/+ -> inf (sin tapa cerrada en el extremo lejano)
+    var L = N - 0.5;
+    var mat = new THREE.LineBasicMaterial({ color: 0x5b9be6, transparent: true, opacity: 0.35 });
+    var rays = [
+      [[0,0,0],[L,0,0]], [[0,0,0],[0,L,0]], [[0,0,0],[0,0,L]],
+      [[3,0,0],[L,0,0]], [[0,3,0],[0,L,0]], [[0,0,3],[0,0,L]],
+      [[3,3,0],[L,3,0]], [[3,0,3],[L,0,3]], [[0,3,3],[0,L,3]],
+      [[4,4,0],[4,4,L]], [[4,0,4],[4,L,4]], [[0,4,4],[L,4,4]]
+    ];
+    rays.forEach(function (r) {
+      gOpenBox.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(r[0][0], r[0][1], r[0][2]), new THREE.Vector3(r[1][0], r[1][1], r[1][2])]),
+        mat
+      ));
+    });
+
+    // Hitos diagonales (4,4,4), (5,5,5), ..., (kMax,kMax,kMax)
+    var maxK = Math.max(4, elem.kMax);
+    for (var k = 4; k <= maxK; k++) {
+      var col = (k === 4) ? 0xf08a5d : 0x5b9be6;
+      var marker = new THREE.Mesh(
+        new THREE.BoxGeometry(0.42, 0.42, 0.42),
+        new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: k === 4 ? 0.95 : 0.65 })
+      );
+      marker.position.set(k, k, k);
+      gOpenBox.add(marker);
+    }
+
+    // Línea diagonal (0,0,0) -> (maxK, maxK, maxK) -> inf
+    gOpenBox.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(maxK + 0.8, maxK + 0.8, maxK + 0.8)]),
+      new THREE.LineBasicMaterial({ color: 0xf08a5d, transparent: true, opacity: 0.3 })
+    ));
+  }
+
+  function buildNucleusAndBlochAnchor() {
+    // Núcleo de A = Z + N nucleones en 2 InstancedMesh (protones / neutrones) en (0,0,0)
+    var A = elem.z + elem.n;
+    var pCount = elem.z, nCount = elem.n;
+    var pPos = [], nPos = [];
+    for (var i = 0; i < A; i++) {
+      var k = Math.floor(i / 20);
+      var r = 0.14 + 0.1 * k;
+      var zz = 1 - 2 * ((i + 0.5) / A);
+      var rr = Math.sqrt(Math.max(0, 1 - zz * zz));
+      var ph = i * Math.PI * (3 - Math.sqrt(5));
+      var pt = [r * rr * Math.cos(ph), r * rr * Math.sin(ph), r * zz];
+      var isP = (i % 2 === 0 && pCount > 0) || nCount === 0;
+      if (isP) { pCount--; pPos.push(pt); } else { nCount--; nPos.push(pt); }
+    }
+    var gP = new THREE.SphereGeometry(0.08, 8, 8);
+    var m4 = new THREE.Matrix4();
+    if (pPos.length) {
+      var imP = new THREE.InstancedMesh(gP, new THREE.MeshBasicMaterial({ color: 0xf0605f }), pPos.length);
+      pPos.forEach(function (pt, idx) { m4.setPosition(pt[0], pt[1], pt[2]); imP.setMatrixAt(idx, m4); });
+      imP.instanceMatrix.needsUpdate = true;
+      gNucleus.add(imP);
+    }
+    if (nPos.length) {
+      var imN = new THREE.InstancedMesh(gP, new THREE.MeshBasicMaterial({ color: 0x5b9be6 }), nPos.length);
+      nPos.forEach(function (pt, idx) { m4.setPosition(pt[0], pt[1], pt[2]); imN.setMatrixAt(idx, m4); });
+      imN.instanceMatrix.needsUpdate = true;
+      gNucleus.add(imN);
+    }
+
+    // Bola de Bloch d=2 anclada en (0,0,0) (primer paso 0 <-> 1)
+    var bWire = new THREE.Mesh(
+      new THREE.SphereGeometry(0.62, 14, 14),
+      new THREE.MeshBasicMaterial({ color: 0xa48bf0, wireframe: true, transparent: true, opacity: 0.45 })
+    );
+    gBlochAnchor.add(bWire);
+  }
+
+  function buildFluctuationOctants() {
+    // Los 7 octantes no positivos (fluctuación) + cubo [-3,3]^3 tenue
+    var pts = [];
+    var lim = Math.min(N - 1, 8);
+    for (var x = -lim; x <= lim; x++) {
+      for (var y = -lim; y <= lim; y++) {
+        for (var z = -lim; z <= lim; z++) {
+          if (x >= 0 && y >= 0 && z >= 0) continue; // +/+/+ es el dominio principal
+          if ((Math.abs(x) + Math.abs(y) + Math.abs(z)) % 2 !== 0) continue;
+          pts.push(x, y, z);
+        }
+      }
+    }
+    var geom = new THREE.BufferGeometry();
+    geom.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    gFluct.add(new THREE.Points(geom, new THREE.PointsMaterial({ color: 0x8a8985, size: 0.09, transparent: true, opacity: 0.24 })));
+  }
+
+  // ---- Espectro completo del Open Cube (PR #2096 + Cube/Basic.lean) --------
+  var specMesh = null;
+  function updateOpenCubeSpectrum() {
+    while (gSpectrum.children.length) gSpectrum.remove(gSpectrum.children[0]);
+    var mx = parseInt(document.getElementById("sl-mx").value, 10) || 1;
+    var my = parseInt(document.getElementById("sl-my").value, 10) || 1;
+    var mz = parseInt(document.getElementById("sl-mz").value, 10) || 1;
+    document.getElementById("val-mx").textContent = String(mx);
+    document.getElementById("val-my").textContent = String(my);
+    document.getElementById("val-mz").textContent = String(mz);
+
+    // Energía tight-binding abierta (E0 = 0, t = 1): E = -2 sum cos(pi * m_j / (N + 1))
+    var energy = -2 * (
+      Math.cos(Math.PI * mx / (N + 1)) +
+      Math.cos(Math.PI * my / (N + 1)) +
+      Math.cos(Math.PI * mz / (N + 1))
+    );
+    document.getElementById("spec-readout").innerHTML =
+      "Modo <b>(" + mx + ", " + my + ", " + mz + ")</b> en <code>Fin " + N + "³</code><br>" +
+      "E<sub>m</sub> = E₀ − 2t·∑cos(πm<sub>j</sub>/(" + (N + 1) + ")) = <span class='c-blue'>" + energy.toFixed(4) + " t</span><br>" +
+      "C<sub>" + N + "</sub> = <span class='c-warm'>" + cN.toFixed(5) + "</span> (Szegő &lt; " + SZEGO_MAX.toFixed(4) + ")<br>" +
+      "det Σ / |det Ω| = <b>" + detRatio.toFixed(4) + "</b>" +
+      (N >= 4 ? " · umbral N≥4 abierto" : "");
+
+    // Pintar nodos del espectro en +/+/+ escalados/coloreados por |psi|²
+    var coords = [];
+    var weights = [];
+    var maxW = 0;
+    for (var x = 0; x < N; x++) {
+      var sx = Math.sin(Math.PI * mx * (x + 1) / (N + 1));
+      for (var y = 0; y < N; y++) {
+        var sy = Math.sin(Math.PI * my * (y + 1) / (N + 1));
+        for (var z = 0; z < N; z++) {
+          var sz = Math.sin(Math.PI * mz * (z + 1) / (N + 1));
+          var w = sx * sx * sy * sy * sz * sz;
+          if (w > 0.05) {
+            coords.push(x, y, z);
+            weights.push(w);
+            if (w > maxW) maxW = w;
+          }
+        }
+      }
+    }
+    var count = weights.length;
+    var cSat = new THREE.Color(0xffc400);
+    var cOpen = new THREE.Color(0x5b9be6);
+    var cHot = new THREE.Color(0xf08a5d);
+    if (N <= 8 && count <= 500) {
+      var geom = new THREE.BoxGeometry(0.24, 0.24, 0.24);
+      var mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 });
+      specMesh = new THREE.InstancedMesh(geom, mat, Math.max(1, count));
+      var m4 = new THREE.Matrix4(), sc = new THREE.Vector3(), pos = new THREE.Vector3(), q = new THREE.Quaternion(), col = new THREE.Color();
+      for (var i = 0; i < count; i++) {
+        var wn = weights[i] / (maxW || 1);
+        var s = 0.25 + 0.65 * Math.sqrt(wn);
+        pos.set(coords[3 * i], coords[3 * i + 1], coords[3 * i + 2]);
+        sc.set(s, s, s);
+        m4.compose(pos, q, sc);
+        specMesh.setMatrixAt(i, m4);
+        var isSat = coords[3 * i] <= 3 && coords[3 * i + 1] <= 3 && coords[3 * i + 2] <= 3;
+        col.copy(isSat ? cSat : cOpen).lerp(cHot, wn * 0.72);
+        specMesh.setColorAt(i, col);
+      }
+      specMesh.instanceMatrix.needsUpdate = true;
+      if (specMesh.instanceColor) specMesh.instanceColor.needsUpdate = true;
+      gSpectrum.add(specMesh);
+    } else {
+      // Para cajas grandes (Fe, Og) usamos Points con vertexColors: 60 FPS sin overdraw
+      var pArr = new Float32Array(count * 3);
+      var cArr = new Float32Array(count * 3);
+      var col2 = new THREE.Color();
+      for (var j = 0; j < count; j++) {
+        var wn2 = weights[j] / (maxW || 1);
+        pArr[3 * j] = coords[3 * j];
+        pArr[3 * j + 1] = coords[3 * j + 1];
+        pArr[3 * j + 2] = coords[3 * j + 2];
+        var isSat2 = coords[3 * j] <= 3 && coords[3 * j + 1] <= 3 && coords[3 * j + 2] <= 3;
+        col2.copy(isSat2 ? cSat : cOpen).lerp(cHot, wn2 * 0.78);
+        cArr[3 * j] = col2.r; cArr[3 * j + 1] = col2.g; cArr[3 * j + 2] = col2.b;
+      }
+      var pGeom = new THREE.BufferGeometry();
+      pGeom.setAttribute("position", new THREE.BufferAttribute(pArr, 3));
+      pGeom.setAttribute("color", new THREE.BufferAttribute(cArr, 3));
+      specMesh = new THREE.Points(pGeom, new THREE.PointsMaterial({ size: 0.22, vertexColors: true, transparent: true, opacity: 0.65 }));
+      gSpectrum.add(specMesh);
+    }
+  }
+
+  ["sl-mx", "sl-my", "sl-mz"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", updateOpenCubeSpectrum);
+  });
+
+  // ---- Electrones en +/+/+ y motor de hopping discreto ---------------------
+  var electronObjs = [];
+  var selectedIdx = elem.electrones.length - 1;
+  var autoHop = true;
+  var hopHz = 120;
+  var lastHop = 0;
+  var MAX_TRAIL = 50;
+
+  var elecListEl = document.getElementById("elec-list");
+  var legListEl = document.getElementById("legend-list");
+  var legCountEl = document.getElementById("legend-count");
+
+  function buildElectronsAndHUD() {
+    elecListEl.innerHTML = "";
+    legListEl.innerHTML = "";
+    var legendGroups = {};
+
+    elem.electrones.forEach(function (e, idx) {
+      var id = e[0], orb = e[1], spin = e[2], kNivel = e[3], pos = e[4], hex = e[5], isCore = e[6];
+      var colorNum = parseInt(hex, 16);
+      var sub = isCore ? "1s" : orb.replace(/(px|py|pz|dxy|dyz|dxz|dx2y2|dz2|fz3|fxz2|fyz2|fxyz|fzxy|fx3|fy3)$/, "");
+      var grp = new THREE.Group();
+      var sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 12, 12),
+        new THREE.MeshBasicMaterial({ color: colorNum })
+      );
+      grp.add(sphere);
+      grp.position.set(pos[0], pos[1], pos[2]);
+      gElectrons.add(grp);
+
+      var trailMat = new THREE.LineBasicMaterial({ color: colorNum, transparent: true, opacity: 0.72 });
+      var trailGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(pos[0], pos[1], pos[2])]);
+      var trail = new THREE.Line(trailGeom, trailMat);
+      gElectrons.add(trail);
+
+      electronObjs.push({
+        id: id, orb: orb, spin: spin, sub: sub, kNivel: kNivel,
+        hex: "#" + hex, isCore: isCore, active: true,
+        initPos: pos.slice(), pos: pos.slice(), target: pos.slice(),
+        history: [pos.slice()], group: grp, trail: trail
+      });
+
+      // Fila en lista
+      var row = document.createElement("div");
+      row.className = "erow" + (idx === selectedIdx ? " on" : "");
+      row.id = "erow-" + idx;
+      row.innerHTML =
+        '<div class="eswatch" style="background:#' + hex + ';">' + (spin === "up" ? "↑" : "↓") + '</div>' +
+        '<div>e' + id + ' · ' + orb + ' <span style="color:var(--muted);">' + (isCore ? "core≤3" : "k=" + kNivel) + '</span></div>' +
+        '<div class="epos" id="epos-' + idx + '">(' + pos.join(",") + ')</div>' +
+        '<input type="checkbox" checked aria-label="Activar e' + id + '">';
+      row.addEventListener("click", function (ev) {
+        if (ev.target.tagName === "INPUT") return;
+        selectElectron(idx);
+      });
+      row.querySelector("input").addEventListener("change", function (ev) {
+        var act = ev.target.checked;
+        electronObjs[idx].active = act;
+        electronObjs[idx].group.visible = act;
+        electronObjs[idx].trail.visible = act && document.getElementById("tog-trails").checked;
+        updateStats();
+      });
+      elecListEl.appendChild(row);
+
+      if (!legendGroups[orb]) legendGroups[orb] = { hex: "#" + hex, ids: [] };
+      legendGroups[orb].ids.push("e" + id);
+    });
+
+    // Leyenda acotada con scroll
+    var fixedItems = [
+      { col: "#f0605f", txt: "Núcleo " + elem.sim + "-" + elem.masaA + " (" + elem.z + "p+" + elem.n + "n)" },
+      { col: "#ffc400", txt: "Core saturante ≤ (3,3,3)" },
+      { col: "#f08a5d", txt: "1.º orbital (4,4,4) +/+/+" }
+    ];
+    fixedItems.forEach(function (it) {
+      var d = document.createElement("div");
+      d.className = "litem";
+      d.innerHTML = '<span class="lsw" style="background:' + it.col + ';"></span><span>' + it.txt + '</span>';
+      legListEl.appendChild(d);
+    });
+    Object.keys(legendGroups).forEach(function (k) {
+      var g = legendGroups[k];
+      var d = document.createElement("div");
+      d.className = "litem";
+      d.innerHTML = '<span class="lsw" style="background:' + g.hex + ';"></span><span>' + k + " (" + g.ids.join(", ") + ")</span>";
+      legListEl.appendChild(d);
+    });
+    legCountEl.textContent = "(" + Object.keys(legendGroups).length + " orbitales)";
+  }
+
+  function filterElectronsBySubshell(key) {
+    electronObjs.forEach(function (obj, idx) {
+      var show = (key === "all") || (obj.orb.indexOf(key) === 0);
+      obj.active = show;
+      obj.group.visible = show;
+      obj.trail.visible = show && document.getElementById("tog-trails").checked;
+      var cb = document.querySelector("#erow-" + idx + " input");
+      if (cb) cb.checked = show;
+    });
+    updateStats();
+  }
+
+  function selectElectron(idx) {
+    selectedIdx = idx;
+    electronObjs.forEach(function (_, i) {
+      var r = document.getElementById("erow-" + i);
+      if (r) r.classList.toggle("on", i === idx);
+    });
+    updateStats();
+  }
+
+  function stepElectron(idx, axis, delta) {
+    var obj = electronObjs[idx];
+    if (!obj || !obj.active) return false;
+    var next = obj.pos.slice();
+    next[axis] += delta;
+    // Fronteras estrictas en +/+/+:
+    // core: [1, 3]^3; orbitales no saturantes: [4, N-1]^3
+    var lo = obj.isCore ? 1 : 4;
+    var hi = obj.isCore ? 3 : (N - 1);
+    if (next[0] < lo || next[1] < lo || next[2] < lo) return false;
+    if (next[0] > hi || next[1] > hi || next[2] > hi) return false;
+
+    // Exclusión espacial de Pauli (1 celda = 1 electrón activo)
+    for (var i = 0; i < electronObjs.length; i++) {
+      if (i === idx || !electronObjs[i].active) continue;
+      var p = electronObjs[i].pos;
+      if (p[0] === next[0] && p[1] === next[1] && p[2] === next[2]) return false;
+    }
+
+    obj.pos = next.slice();
+    obj.target = next.slice();
+    obj.history.push(next.slice());
+    if (obj.history.length > MAX_TRAIL) obj.history.shift();
+    obj.trail.geometry.setFromPoints(obj.history.map(function (pt) { return new THREE.Vector3(pt[0], pt[1], pt[2]); }));
+    var lbl = document.getElementById("epos-" + idx);
+    if (lbl) lbl.textContent = "(" + next.join(",") + ")";
+    return true;
+  }
+
+  var DIRS = [[0,1],[0,-1],[1,1],[1,-1],[2,1],[2,-1]];
+  function randomHopBatch() {
+    var active = [];
+    for (var i = 0; i < electronObjs.length; i++) if (electronObjs[i].active) active.push(i);
+    if (!active.length) return;
+    var batch = Math.max(1, Math.min(12, Math.ceil(active.length / 4)));
+    for (var b = 0; b < batch; b++) {
+      var idx = active[Math.floor(Math.random() * active.length)];
+      var d = DIRS[Math.floor(Math.random() * DIRS.length)];
+      stepElectron(idx, d[0], d[1]);
+    }
+  }
+
+  document.querySelectorAll("[data-hop]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var parts = btn.getAttribute("data-hop").split(",").map(Number);
+      if (stepElectron(selectedIdx, parts[0], parts[1])) updateStats();
+    });
+  });
+
+  document.getElementById("btn-hop-toggle").addEventListener("click", function (ev) {
+    autoHop = !autoHop;
+    ev.target.textContent = autoHop ? "⏸ Pausar" : "▶ Reanudar";
+  });
+  document.getElementById("btn-hop-reset").addEventListener("click", function () {
+    electronObjs.forEach(function (obj, idx) {
+      obj.pos = obj.initPos.slice();
+      obj.target = obj.initPos.slice();
+      obj.history = [obj.initPos.slice()];
+      obj.group.position.set(obj.pos[0], obj.pos[1], obj.pos[2]);
+      obj.trail.geometry.setFromPoints([new THREE.Vector3(obj.pos[0], obj.pos[1], obj.pos[2])]);
+      var lbl = document.getElementById("epos-" + idx);
+      if (lbl) lbl.textContent = "(" + obj.pos.join(",") + ")";
+    });
+    updateStats();
+  });
+  document.getElementById("sl-speed").addEventListener("input", function (ev) {
+    hopHz = parseInt(ev.target.value, 10);
+    document.getElementById("val-speed").textContent = hopHz + " Hz";
+  });
+
+  // ---- PIP Bola de Bloch d=2 (BolaDeBloch.lean) ----------------------------
+  var blochCvs = document.getElementById("bloch-canvas");
+  var bRenderer = createSafeRenderer(blochCvs);
+  var bScene = new THREE.Scene();
+  var bCam = new THREE.PerspectiveCamera(40, 240 / 145, 0.1, 30);
+  bCam.position.set(2.4, 1.9, 2.7);
+  bCam.lookAt(0, 0, 0);
+  bScene.add(new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), new THREE.MeshBasicMaterial({ color: 0xa48bf0, wireframe: true, transparent: true, opacity: 0.35 })));
+  var bEq = new THREE.Mesh(new THREE.RingGeometry(0.98, 1.01, 32), new THREE.MeshBasicMaterial({ color: 0x5b9be6, side: THREE.DoubleSide }));
+  bEq.rotation.x = Math.PI / 2;
+  bScene.add(bEq);
+  var bArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 1, 0xf08a5d, 0.22, 0.12);
+  bScene.add(bArrow);
+
+  var bR = 1.0, bTh = Math.PI / 2, bPh = Math.PI / 4;
+  function updateBlochPIP() {
+    var x = bR * Math.sin(bTh) * Math.cos(bPh);
+    var y = bR * Math.sin(bTh) * Math.sin(bPh);
+    var z = bR * Math.cos(bTh);
+    var dir = new THREE.Vector3(x, z, y);
+    var len = Math.max(0.01, dir.length());
+    bArrow.setDirection(dir.normalize());
+    bArrow.setLength(len, 0.22, 0.12);
+    var defect = Math.max(0, 1 - (x * x + y * y + z * z));
+    document.getElementById("bloch-stats").innerHTML =
+      "<div>ρ₀₀: <b>" + (0.5 * (1 + z)).toFixed(2) + "</b></div>" +
+      "<div>ρ₁₁: <b>" + (0.5 * (1 - z)).toFixed(2) + "</b></div>" +
+      "<div>J: <b>" + y.toFixed(3) + "</b></div>" +
+      "<div>Δ<sub>RS</sub>: <b>" + defect.toFixed(3) + "</b></div>";
+  }
+  ["sl-br", "sl-bt", "sl-bp"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", function () {
+      bR = parseFloat(document.getElementById("sl-br").value) / 100;
+      bTh = parseFloat(document.getElementById("sl-bt").value) * Math.PI / 180;
+      bPh = parseFloat(document.getElementById("sl-bp").value) * Math.PI / 180;
+      document.getElementById("val-br").textContent = bR.toFixed(2);
+      document.getElementById("val-bt").textContent = Math.round(bTh * 180 / Math.PI) + "°";
+      document.getElementById("val-bp").textContent = Math.round(bPh * 180 / Math.PI) + "°";
+      updateBlochPIP();
+    });
+  });
+
+  function updateStats() {
+    var active = electronObjs.filter(function (o) { return o.active; });
+    document.getElementById("stat-elec").textContent = active.length + " / " + elem.z;
+    var minD = Infinity;
+    for (var i = 0; i < active.length; i++) {
+      for (var j = i + 1; j < active.length; j++) {
+        var a = active[i].pos, b = active[j].pos;
+        var d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+        if (d < minD) minD = d;
+      }
+    }
+    var sel = electronObjs[selectedIdx];
+    var rNuc = sel ? Math.hypot(sel.pos[0], sel.pos[1], sel.pos[2]) : 0;
+    var minTxt = active.length < 2 ? "— (" + active.length + " electrón activo)" : (minD.toFixed(3) + " ≥ 1");
+    document.getElementById("stat-dmin").textContent = minTxt;
+    document.getElementById("metric-readout").innerHTML =
+      "Electrón seleccionado: <b>e" + sel.id + " (" + sel.orb + ")</b> en <code>(" + sel.pos.join(", ") + ")</code><br>" +
+      "Distancia al origen (0,0,0): <span class='c-blue'>" + rNuc.toFixed(3) + "</span> celdas (L₁ = " +
+      (sel.pos[0] + sel.pos[1] + sel.pos[2]) + " pasos)<br>" +
+      "Distancia mínima e⁻–e⁻: <span class='c-warm'>" + minTxt + "</span>";
+  }
+
+  // ---- Capas y vistas de cámara desde (0,0,0) -> +/+/+ ---------------------
+  var CAMERAS = {
+    esquina0: { pos: [-N * 0.92, N * 0.65, N * 1.95], target: [N * 0.44, N * 0.42, N * 0.40] },
+    core:     { pos: [-2.8, 2.6, 6.8], target: [1.5, 1.5, 1.5] },
+    diag:     { pos: [N * 1.55, N * 1.45, N * 1.55], target: [3.2, 3.2, 3.2] },
+    xy:       { pos: [N * 0.45, N * 0.45, N * 2.25], target: [N * 0.45, N * 0.45, 0] },
+    xz:       { pos: [N * 0.45, N * 2.35, N * 0.45], target: [N * 0.45, 0, N * 0.45] },
+    iso:      { pos: [N * 1.75, N * 1.30, -N * 0.85], target: [N * 0.4, N * 0.4, N * 0.4] }
+  };
+  function setView(k) {
+    var v = CAMERAS[k];
+    if (!v) return;
+    camera.position.set(v.pos[0], v.pos[1], v.pos[2]);
+    controls.target.set(v.target[0], v.target[1], v.target[2]);
+    controls.update();
+    document.querySelectorAll(".vbtn").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-view") === k); });
+  }
+  document.querySelectorAll(".vbtn").forEach(function (b) {
+    b.addEventListener("click", function () { setView(b.getAttribute("data-view")); });
+  });
+
+  function syncLayers() {
+    gCore.visible = document.getElementById("tog-core").checked;
+    gOpenBox.visible = document.getElementById("tog-open").checked;
+    gSpectrum.visible = document.getElementById("tog-spec").checked;
+    gAxes.visible = document.getElementById("tog-axes").checked;
+    gZeroPlanes.visible = document.getElementById("tog-zero").checked;
+    gNucleus.visible = document.getElementById("tog-nuc").checked;
+    gBlochAnchor.visible = document.getElementById("tog-nuc").checked;
+    gFluct.visible = document.getElementById("tog-fluct").checked;
+    var tr = document.getElementById("tog-trails").checked;
+    electronObjs.forEach(function (o) { o.trail.visible = tr && o.active; });
+  }
+  ["tog-core", "tog-open", "tog-spec", "tog-axes", "tog-zero", "tog-nuc", "tog-fluct", "tog-trails"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", syncLayers);
+  });
+
+  function onResize() {
+    var w = wrap3d.clientWidth || 800;
+    var h = wrap3d.clientHeight || 600;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+    bRenderer.setSize(240, 145, false);
+  }
+  window.addEventListener("resize", onResize);
+
+  // ---- Inicialización y loop -----------------------------------------------
+  buildAxes();
+  buildZeroPlanes();
+  buildCoreSaturante();
+  buildOpenCubeFrame();
+  buildNucleusAndBlochAnchor();
+  buildFluctuationOctants();
+  buildElectronsAndHUD();
+  updateOpenCubeSpectrum();
+  updateBlochPIP();
+  updateStats();
+  syncLayers();
+  setView("esquina0");
+  onResize();
+
+  var clock = new THREE.Clock();
+  var lastDomSync = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = clock.getDelta();
+    var elapsed = clock.getElapsedTime();
+    if (autoHop) {
+      var step = 1 / hopHz;
+      if (elapsed - lastHop > 0.1) lastHop = elapsed - step;
+      var loops = 0;
+      var changed = false;
+      while (elapsed - lastHop >= step && loops < 3) {
+        lastHop += step;
+        loops++;
+        randomHopBatch();
+        changed = true;
+      }
+      if (changed && elapsed - lastDomSync > 0.12) {
+        lastDomSync = elapsed;
+        updateStats();
+      }
+    }
+    electronObjs.forEach(function (o) {
+      if (!o.active) return;
+      o.group.position.lerp(new THREE.Vector3(o.target[0], o.target[1], o.target[2]), 0.32);
+    });
+    bScene.rotation.y += dt * 0.35;
+    controls.update();
+    renderer.render(scene, camera);
+    bRenderer.render(bScene, bCam);
+  }
+  animate();
+})();

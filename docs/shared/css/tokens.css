@@ -1,24 +1,78 @@
-/* Palette shared by the landing and the inner pages
-   (the same tokens as BACQM-NRS3 and nava-robertson-schrodinger). */
+/* Paleta compartida entre portada, tabla periódica, visor 3D y páginas formales
+   (misma identidad editorial que nrs3-cristales y nrs3-hidrogeno). */
 :root {
-  --bg: #f4f3ef; --panel: #ffffff; --ink: #0b0b0b; --ink2: #3b3a37; --muted: #67665f;
-  --grid: #c9c7c0; --blue: #1f63b8; --orange: #eb6834; --green: #2f8f5b; --red: #d0343a; --violet: #7c5cd6;
+  --bg: #f4f3ef;
+  --dusk: #eae8e1;
+  --panel: #ffffff;
+  --panel-alt: #f8f7f3;
+  --line: #d4d2ca;
+  --ink: #0b0b0b;
+  --ink2: #3b3a37;
+  --muted: #67665f;
+  --grid: #c9c7c0;
+  --blue: #1f63b8;
+  --orange: #d95b26;
+  --warm: #d95b26;
+  --green: #237a4b;
+  --red: #c53036;
+  --violet: #6a4bc4;
+  --gold: #b87b00;
+  --serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --ease: cubic-bezier(.2, .8, .2, 1);
   color-scheme: light;
 }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f0f0e; --panel: #171716; --ink: #f2f1ee; --ink2: #c4c3bf; --muted: #8a8985;
-    --grid: #2a2927; --blue: #5b9be6; --orange: #f08a5d; --green: #4fb37d; --red: #f0605f; --violet: #a48bf0;
+    --bg: #06080b;
+    --dusk: #0d1520;
+    --panel: #0d1520;
+    --panel-alt: #121c2a;
+    --line: #1e2631;
+    --ink: #f2f1ee;
+    --ink2: #c4c3bf;
+    --muted: #8a8985;
+    --grid: #252e3a;
+    --blue: #5b9be6;
+    --orange: #f08a5d;
+    --warm: #f08a5d;
+    --green: #4fb37d;
+    --red: #f0605f;
+    --violet: #a48bf0;
+    --gold: #ffc400;
     color-scheme: dark;
   }
 }
+
 :root[data-theme="dark"] {
-  --bg: #0f0f0e; --panel: #171716; --ink: #f2f1ee; --ink2: #c4c3bf; --muted: #8a8985;
-  --grid: #2a2927; --blue: #5b9be6; --orange: #f08a5d; --green: #4fb37d; --red: #f0605f; --violet: #a48bf0;
+  --bg: #06080b;
+  --dusk: #0d1520;
+  --panel: #0d1520;
+  --panel-alt: #121c2a;
+  --line: #1e2631;
+  --ink: #f2f1ee;
+  --ink2: #c4c3bf;
+  --muted: #8a8985;
+  --grid: #252e3a;
+  --blue: #5b9be6;
+  --orange: #f08a5d;
+  --warm: #f08a5d;
+  --green: #4fb37d;
+  --red: #f0605f;
+  --violet: #a48bf0;
+  --gold: #ffc400;
   color-scheme: dark;
 }
-body { margin: 0; background: var(--bg); color: var(--ink);
-  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
 a { color: var(--blue); }
-code { font: 0.86em/1.4 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+code { font: 0.86em/1.4 var(--mono); }
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
