@@ -56,6 +56,20 @@
   }
   var SZEGO_MAX = Math.sqrt(Math.PI * Math.PI / 3 - 2);
 
+  // Red espectral del pathgraph 3D: cada eje (x, y, z) es una cadena abierta con su propio C_Nava
+  // (PR #1725 CNava_alongX/Y/Z, #1742 det Σ = (C_x C_y C_z)² |det Ω|, estricto desde 4×4×4).
+  // Core 0..3 a paso 1 (saturado, C_3 = 1). Desde 4 el paso por eje es C_j, estrictamente creciente
+  // (#1735 cNavaSqForm_strictMonoOn) y acotado por SZEGO_MAX (#1734 tendsto_CNava).
+  // La lógica de saltos y Pauli sigue en enteros; W() solo coloca y mide en la red deformada.
+  var warpTab = [0, 1, 2, 3];
+  function W(m) {
+    if (m <= 3) return m;
+    var i = Math.floor(m);
+    while (warpTab.length <= i) warpTab.push(warpTab[warpTab.length - 1] + calcCN(warpTab.length));
+    var f = m - i;
+    return warpTab[i] + (f > 0 ? f * calcCN(i + 1) : 0);
+  }
+
   // ---- Poblar HUD textual por elemento (cero residuos heredados) -----------
   var N = elem.cajaN;
   var totalSites = N * N * N;
@@ -184,7 +198,7 @@
   gFluct.visible = false; // Apagado por defecto: 7 octantes solo fluctuación
 
   function buildAxes() {
-    var len = N + 1.6;
+    var len = W(N + 1.6);
     var cfg = [
       { dir: [1, 0, 0], col: 0x5b9be6 },
       { dir: [0, 1, 0], col: 0x4fb37d },
@@ -213,8 +227,8 @@
     var maxC = N - 1;
     var mat = new THREE.LineBasicMaterial({ color: 0x64748b, transparent: true, opacity: 0.2 });
     for (var i = 0; i <= maxC; i++) {
-      gZeroPlanes.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(i, 0, 0), new THREE.Vector3(i, 0, maxC)]), mat));
-      gZeroPlanes.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, i), new THREE.Vector3(maxC, 0, i)]), mat));
+      gZeroPlanes.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(W(i), 0, 0), new THREE.Vector3(W(i), 0, W(maxC))]), mat));
+      gZeroPlanes.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, W(i)), new THREE.Vector3(W(maxC), 0, W(i))]), mat));
     }
   }
 
@@ -245,7 +259,7 @@
             else ptsInner.push(x, y, z);
           } else if (x === 3 || y === 3 || z === 3) {
             // Todo punto en +/+/+ que lleva al menos un 3 satura: (3,4,3), (3,5,3), (3,6,3), (3,5,5), (3,6,6)...
-            ptsSlab3.push(x, y, z);
+            ptsSlab3.push(W(x), W(y), W(z));
           }
         }
       }
@@ -272,8 +286,8 @@
     wallLines.forEach(function (seg) {
       gCore.add(new THREE.Line(
         new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(seg[0][0], seg[0][1], seg[0][2]),
-          new THREE.Vector3(seg[1][0], seg[1][1], seg[1][2])
+          new THREE.Vector3(W(seg[0][0]), W(seg[0][1]), W(seg[0][2])),
+          new THREE.Vector3(W(seg[1][0]), W(seg[1][1]), W(seg[1][2]))
         ]),
         wallMat
       ));
@@ -291,7 +305,7 @@
     ];
     rays.forEach(function (r) {
       gOpenBox.add(new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(r[0][0], r[0][1], r[0][2]), new THREE.Vector3(r[1][0], r[1][1], r[1][2])]),
+        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(W(r[0][0]), W(r[0][1]), W(r[0][2])), new THREE.Vector3(W(r[1][0]), W(r[1][1]), W(r[1][2]))]),
         mat
       ));
     });
@@ -304,14 +318,15 @@
     for (var k = 0; k <= maxK; k++) {
       var m = k <= 3 ? coreTickMat : notchMat;
       var d = k <= 3 ? 0.16 : 0.24;
-      notchPts.push(k, k, k);
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k - d, k, k), new THREE.Vector3(k + d, k, k)]), m));
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, k - d, k), new THREE.Vector3(k, k + d, k)]), m));
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, k, k - d), new THREE.Vector3(k, k, k + d)]), m));
+      var wk = W(k);
+      notchPts.push(wk, wk, wk);
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(wk - d, wk, wk), new THREE.Vector3(wk + d, wk, wk)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(wk, wk - d, wk), new THREE.Vector3(wk, wk + d, wk)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(wk, wk, wk - d), new THREE.Vector3(wk, wk, wk + d)]), m));
       // Muescas sobre ejes +X, +Y, +Z desde 0
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, -0.15, 0), new THREE.Vector3(k, 0.15, 0)]), m));
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.15, k, 0), new THREE.Vector3(0.15, k, 0)]), m));
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -0.15, k), new THREE.Vector3(0, 0.15, k)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(wk, -0.15, 0), new THREE.Vector3(wk, 0.15, 0)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.15, wk, 0), new THREE.Vector3(0.15, wk, 0)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -0.15, wk), new THREE.Vector3(0, 0.15, wk)]), m));
     }
     var nGeom = new THREE.BufferGeometry();
     nGeom.setAttribute("position", new THREE.Float32BufferAttribute(notchPts, 3));
@@ -319,7 +334,7 @@
 
     // Guía diagonal continua desde el ancla inferior izquierda (0,0,0) -> (3,3,3) -> (4,4,4) -> (5,5,5) -> inf
     gOpenBox.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(maxK + 0.8, maxK + 0.8, maxK + 0.8)]),
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(W(maxK + 0.8), W(maxK + 0.8), W(maxK + 0.8))]),
       new THREE.LineBasicMaterial({ color: 0x8a8985, transparent: true, opacity: 0.42 })
     ));
   }
@@ -358,7 +373,7 @@
         p.vis.x += (p.pos[0] - p.vis.x) * alpha;
         p.vis.y += (p.pos[1] - p.vis.y) * alpha;
         p.vis.z += (p.pos[2] - p.vis.z) * alpha;
-        m4.setPosition(p.vis.x, p.vis.y, p.vis.z);
+        m4.setPosition(W(p.vis.x), W(p.vis.y), W(p.vis.z));
         im.setMatrixAt(i, m4);
         if (arr && line.visible) {
           var base = i * stride;
@@ -367,8 +382,8 @@
             var i0 = (h + 1 + s) % NUC_TRAIL;
             var i1 = (h + 2 + s) % NUC_TRAIL;
             var off = base + s * 6;
-            arr[off]     = p.hx[i0]; arr[off + 1] = p.hy[i0]; arr[off + 2] = p.hz[i0];
-            arr[off + 3] = p.hx[i1]; arr[off + 4] = p.hy[i1]; arr[off + 5] = p.hz[i1];
+            arr[off]     = W(p.hx[i0]); arr[off + 1] = W(p.hy[i0]); arr[off + 2] = W(p.hz[i0]);
+            arr[off + 3] = W(p.hx[i1]); arr[off + 4] = W(p.hy[i1]); arr[off + 5] = W(p.hz[i1]);
           }
         }
       }
@@ -510,7 +525,7 @@
       for (var i = 0; i < count; i++) {
         var wn = weights[i] / (maxW || 1);
         var s = 0.25 + 0.65 * Math.sqrt(wn);
-        pos.set(coords[3 * i], coords[3 * i + 1], coords[3 * i + 2]);
+        pos.set(W(coords[3 * i]), W(coords[3 * i + 1]), W(coords[3 * i + 2]));
         sc.set(s, s, s);
         m4.compose(pos, q, sc);
         specMesh.setMatrixAt(i, m4);
@@ -528,9 +543,9 @@
       var col2 = new THREE.Color();
       for (var j = 0; j < count; j++) {
         var wn2 = weights[j] / (maxW || 1);
-        pArr[3 * j] = coords[3 * j];
-        pArr[3 * j + 1] = coords[3 * j + 1];
-        pArr[3 * j + 2] = coords[3 * j + 2];
+        pArr[3 * j] = W(coords[3 * j]);
+        pArr[3 * j + 1] = W(coords[3 * j + 1]);
+        pArr[3 * j + 2] = W(coords[3 * j + 2]);
         var isSat2 = coords[3 * j] <= 3 || coords[3 * j + 1] <= 3 || coords[3 * j + 2] <= 3;
         col2.copy(isSat2 ? cSat : cOpen).lerp(cHot, wn2 * 0.78);
         cArr[3 * j] = col2.r; cArr[3 * j + 1] = col2.g; cArr[3 * j + 2] = col2.b;
@@ -565,9 +580,9 @@
     var nPts = obj.history.length;
     for (var i = 0; i < nPts; i++) {
       var pt = obj.history[i];
-      arr[3 * i] = pt[0];
-      arr[3 * i + 1] = pt[1];
-      arr[3 * i + 2] = pt[2];
+      arr[3 * i] = W(pt[0]);
+      arr[3 * i + 1] = W(pt[1]);
+      arr[3 * i + 2] = W(pt[2]);
     }
     obj.trail.geometry.setDrawRange(0, nPts);
     attr.needsUpdate = true;
@@ -590,12 +605,12 @@
         new THREE.MeshBasicMaterial({ color: colorNum })
       );
       grp.add(sphere);
-      grp.position.set(pos[0], pos[1], pos[2]);
+      grp.position.set(W(pos[0]), W(pos[1]), W(pos[2]));
       gElectrons.add(grp);
 
       var trailMat = new THREE.LineBasicMaterial({ color: colorNum, transparent: true, opacity: 0.72 });
       var trailArr = new Float32Array(MAX_TRAIL * 3);
-      trailArr[0] = pos[0]; trailArr[1] = pos[1]; trailArr[2] = pos[2];
+      trailArr[0] = W(pos[0]); trailArr[1] = W(pos[1]); trailArr[2] = W(pos[2]);
       var trailGeom = new THREE.BufferGeometry();
       trailGeom.setAttribute("position", new THREE.BufferAttribute(trailArr, 3));
       trailGeom.setDrawRange(0, 1);
@@ -753,7 +768,7 @@
       obj.pos = obj.initPos.slice();
       obj.target = obj.initPos.slice();
       obj.history = [obj.initPos.slice()];
-      obj.group.position.set(obj.pos[0], obj.pos[1], obj.pos[2]);
+      obj.group.position.set(W(obj.pos[0]), W(obj.pos[1]), W(obj.pos[2]));
       syncElectronTrailBuffer(obj);
       var lbl = document.getElementById("epos-" + idx);
       if (lbl) lbl.textContent = "(" + obj.pos.join(",") + ")";
@@ -826,7 +841,7 @@
     for (var i = 0; i < orbActive.length; i++) {
       for (var j = i + 1; j < orbActive.length; j++) {
         var a = orbActive[i].pos, b = orbActive[j].pos;
-        var d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+        var d = Math.hypot(W(a[0]) - W(b[0]), W(a[1]) - W(b[1]), W(a[2]) - W(b[2]));
         if (d < minD) minD = d;
       }
     }
@@ -939,7 +954,7 @@
     for (var k = 0; k < electronObjs.length; k++) {
       var o = electronObjs[k];
       if (!o.active) continue;
-      tmpVec.set(o.target[0], o.target[1], o.target[2]);
+      tmpVec.set(W(o.target[0]), W(o.target[1]), W(o.target[2]));
       o.group.position.lerp(tmpVec, 0.5);
     }
     bScene.rotation.y += dt * 0.35;

@@ -11,6 +11,27 @@ body.visor-app {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* Negro vanta del visor (solo modo oscuro): fondo, barras y paneles en negro puro,
+   sin azul marino ni gradiente, para que el color de las aristas y electrones destaque. */
+:root[data-theme="dark"] body.visor-app {
+  --bg: #000;
+  --panel: #000;
+  --panel-alt: #040404;
+  --dusk: #000;
+  --line: #1a1a1a;
+  --grid: #1a1a1a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body.visor-app {
+    --bg: #000;
+    --panel: #000;
+    --panel-alt: #040404;
+    --dusk: #000;
+    --line: #1a1a1a;
+    --grid: #1a1a1a;
+  }
+}
+
 .barra {
   display: flex;
   align-items: center;
@@ -273,7 +294,7 @@ body.visor-app {
   position: relative;
   min-width: 0;
   min-height: 0;
-  background: radial-gradient(95% 95% at 28% 72%, color-mix(in srgb, var(--blue) 9%, var(--bg)), var(--bg));
+  background: var(--bg);
 }
 canvas#main-canvas {
   width: 100%;
