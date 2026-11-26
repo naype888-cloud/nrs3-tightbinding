@@ -59,8 +59,8 @@
   // ---- Poblar HUD textual por elemento (cero residuos heredados) -----------
   var N = elem.cajaN;
   var totalSites = N * N * N;
-  var coreSitesPos = 64; // (0..3)^3 en +/+/+
-  var freeSitesPos = totalSites - coreSitesPos;
+  var freeSitesPos = Math.pow(Math.max(0, N - 4), 3); // x,y,z >= 4 sin ningún 3
+  var coreSitesPos = totalSites - freeSitesPos; // min(x,y,z) <= 3 en +/+/+
   var cN = calcCN(N);
   var detRatio = Math.pow(cN, 6);
 
@@ -73,13 +73,12 @@
     " · Valencia " + elem.valencia + " · Red " + elem.bravais.nombre;
 
   document.getElementById("core-desc-txt").innerHTML =
-    "El <b>cubo amarillo</b> (<code>[-3,3]³</code> = 343 sitios, octante <code>+/+/+</code> en <code>0..3</code>) <b>es</b> la esfera de Bloch generalizada para todos los átomos: " +
-    "aloja los protones (rojo), neutrones (azul) y electrones saturados (<code>d ≤ 3</code>). Potencial de referencia: <code>V(r) ~ −" + elem.z + "/r</code>.";
+    "El <b>núcleo</b> está <b>dentro del átomo</b> en <code>+/+/+</code>: arranca en <b>(0,0,0)</b> (esquina inferior izquierda), abarca todo <code>(0..3)³</code> hasta <code>(3,3,3)</code> y <b>todo punto con algún 3 satura</b> (<code>mín(x,y,z) ≤ 3</code>: <code>(3,4,3)</code>, <code>(3,5,3)</code>, <code>(3,6,3)</code>, <code>(3,5,5)</code>, <code>(3,6,6)</code>…). Potencial: <code>V(r) ~ −" + elem.z + "/r</code>.";
 
   document.getElementById("open-desc-txt").innerHTML =
-    "Pasado el cubo amarillo, la <b>primera muesca gris</b> en <b>(4,4,4)</b> es el <b>orbital 4</b> (1.º no saturado fuera del núcleo, umbral <code>N=4</code> PR #2122), seguido de <b>(5,5,5)</b> (orbital 5)… hasta " +
+    "Sin ningún 3 (<code>x,y,z ≥ 4</code>) arranca el 1.º orbital en la <b>primera muesca gris (4,4,4)</b> (umbral <code>N=4</code> PR #2122), más <code>(4,5,4)</code>, <code>(4,5,5)</code>, <b>(5,5,5)</b>… hasta " +
     (elem.kMax >= 4 ? "<b>(" + elem.kMax + "," + elem.kMax + "," + elem.kMax + ")</b>" : "el borde abierto") +
-    ". <b>1 celda = 1 orbital</b> (PR #2118); vacío comprimido <b>90:10 → 1:1</b> (" + freeSitesPos + " celdas en <code>+/+/+</code>).";
+    ". <b>1 celda = 1 orbital</b> (PR #2118); vacío <b>90:10 → 1:1</b> (" + freeSitesPos + " celdas orbitales en <code>+/+/+</code>).";
 
   document.getElementById("bravais-link").href = "https://naype888-cloud.github.io/nrs3-cristales/lab/#" + elem.bravais.id;
   document.getElementById("bravais-txt").textContent =
@@ -87,7 +86,7 @@
     "Las redes de Bravais son el espectro completo de pasos de eje del cubo.";
 
   document.getElementById("stat-cubo").textContent = "Fin " + N + "³ (+/+/+)";
-  document.getElementById("stat-core").textContent = "0..3 (64 pos / 343 tot)";
+  document.getElementById("stat-core").textContent = "0..3 + todo 3 (" + coreSitesPos + " en +/+/+)";
   document.getElementById("stat-orb").textContent = elem.kMax >= 4 ? "(4,4,4)→(" + elem.kMax + "," + elem.kMax + "," + elem.kMax + ")" : "(4,4,4) umbral";
   document.getElementById("stat-cn").textContent = "C_" + N + "=" + cN.toFixed(4) + " · ΠC²=" + detRatio.toFixed(3);
   document.getElementById("stat-elec").textContent = elem.z + " / " + elem.z;
@@ -220,48 +219,75 @@
   }
 
   function buildCoreSaturante() {
-    // Cubo amarillo saturante = Esfera de Bloch generalizada (d <= 3):
-    // octante +/+/+ [0,3]^3 (64 sitios) y envolvente tenue del core completo [-3,3]^3 (343 sitios)
+    // Núcleo y cubo amarillo 100% DENTRO de +/+/+ (nunca en coordenadas negativas < 0):
+    // 1) Bloque interior [0,3]^3 desde la esquina inferior izquierda (0,0,0) hasta (3,3,3) (64 sitios).
+    // 2) Todo punto en +/+/+ que contenga un 3 (min(x,y,z) <= 3): planos x=3, y=3, z=3 hacia 4,5,6...
+    //    incluyendo (3,4,3), (3,5,3), (3,6,3), (3,5,5), (3,6,6), etc.
     var box = new THREE.BoxGeometry(3, 3, 3);
     box.translate(1.5, 1.5, 1.5);
     gCore.add(new THREE.LineSegments(
       new THREE.EdgesGeometry(box),
-      new THREE.LineBasicMaterial({ color: 0xffc400, transparent: true, opacity: 0.85 })
+      new THREE.LineBasicMaterial({ color: 0xffc400, transparent: true, opacity: 0.88 })
     ));
     gCore.add(new THREE.Mesh(
       box,
-      new THREE.MeshBasicMaterial({ color: 0xffc400, transparent: true, opacity: 0.055, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: 0xffc400, transparent: true, opacity: 0.06, depthWrite: false })
     ));
-    // Envolvente tenue del core completo 343 sitios [-3,3]^3 cuando A > 64
-    if (elem.z + elem.n > 64) {
-      var fullBox = new THREE.BoxGeometry(6, 6, 6);
-      gCore.add(new THREE.LineSegments(
-        new THREE.EdgesGeometry(fullBox),
-        new THREE.LineBasicMaterial({ color: 0xffc400, transparent: true, opacity: 0.24 })
-      ));
-    }
-    // Sitios internos de [0,3]^3 (1..3 dorado, 0 gris tenue)
-    var ptsHab = [], ptsZero = [];
-    for (var x = 0; x <= 3; x++) for (var y = 0; y <= 3; y++) for (var z = 0; z <= 3; z++) {
-      if (x === 0 || y === 0 || z === 0) ptsZero.push(x, y, z);
-      else ptsHab.push(x, y, z);
+
+    // Sitios del bloque [0,3]^3 llegando explícitamente hasta (0,0,0) + franjas saturantes con 3 (hasta lim)
+    var ptsInner = [], ptsSlab3 = [], ptsZero = [];
+    var lim = Math.min(N - 1, Math.max(7, elem.kMax));
+    for (var x = 0; x <= lim; x++) {
+      for (var y = 0; y <= lim; y++) {
+        for (var z = 0; z <= lim; z++) {
+          if (x <= 3 && y <= 3 && z <= 3) {
+            if (x === 0 || y === 0 || z === 0) ptsZero.push(x, y, z);
+            else ptsInner.push(x, y, z);
+          } else if (x === 3 || y === 3 || z === 3) {
+            // Todo punto en +/+/+ que lleva al menos un 3 satura: (3,4,3), (3,5,3), (3,6,3), (3,5,5), (3,6,6)...
+            ptsSlab3.push(x, y, z);
+          }
+        }
+      }
     }
     var gH = new THREE.BufferGeometry();
-    gH.setAttribute("position", new THREE.Float32BufferAttribute(ptsHab, 3));
-    gCore.add(new THREE.Points(gH, new THREE.PointsMaterial({ color: 0xffc400, size: 0.11, transparent: true, opacity: 0.72 })));
+    gH.setAttribute("position", new THREE.Float32BufferAttribute(ptsInner, 3));
+    gCore.add(new THREE.Points(gH, new THREE.PointsMaterial({ color: 0xffc400, size: 0.13, transparent: true, opacity: 0.8 })));
     var gZ = new THREE.BufferGeometry();
     gZ.setAttribute("position", new THREE.Float32BufferAttribute(ptsZero, 3));
-    gCore.add(new THREE.Points(gZ, new THREE.PointsMaterial({ color: 0x8a8985, size: 0.07, transparent: true, opacity: 0.35 })));
+    gCore.add(new THREE.Points(gZ, new THREE.PointsMaterial({ color: 0xf59e0b, size: 0.09, transparent: true, opacity: 0.55 })));
+    if (ptsSlab3.length) {
+      var gS3 = new THREE.BufferGeometry();
+      gS3.setAttribute("position", new THREE.Float32BufferAttribute(ptsSlab3, 3));
+      gCore.add(new THREE.Points(gS3, new THREE.PointsMaterial({ color: 0xf59e0b, size: 0.12, transparent: true, opacity: 0.68 })));
+    }
+    // Guías sutiles de las 3 paredes x=3, y=3, z=3 extendiéndose en +/+/+ (si tiene un 3, satura)
+    var wallMat = new THREE.LineBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.28 });
+    var wallLines = [
+      [[3, 3, 3], [lim, 3, 3]], [[3, 3, 3], [3, lim, 3]], [[3, 3, 3], [3, 3, lim]],
+      [[3, lim, 3], [lim, lim, 3]], [[lim, 3, 3], [lim, lim, 3]],
+      [[3, 3, lim], [lim, 3, lim]], [[lim, 3, 3], [lim, 3, lim]],
+      [[3, 3, lim], [3, lim, lim]], [[3, lim, 3], [3, lim, lim]]
+    ];
+    wallLines.forEach(function (seg) {
+      gCore.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(seg[0][0], seg[0][1], seg[0][2]),
+          new THREE.Vector3(seg[1][0], seg[1][1], seg[1][2])
+        ]),
+        wallMat
+      ));
+    });
   }
 
   function buildOpenCubeFrame() {
-    // Marco abierto desde (0,0,0) hacia +/+/+ -> inf (sin tapa cerrada en el extremo lejano)
+    // Marco abierto desde (0,0,0) hacia +/+/+ -> inf + frontera pura de orbitales (4,4,4)+
     var L = N - 0.5;
     var mat = new THREE.LineBasicMaterial({ color: 0x5b9be6, transparent: true, opacity: 0.3 });
     var rays = [
       [[0,0,0],[L,0,0]], [[0,0,0],[0,L,0]], [[0,0,0],[0,0,L]],
       [[3,0,0],[L,0,0]], [[0,3,0],[0,L,0]], [[0,0,3],[0,0,L]],
-      [[3,3,0],[L,3,0]], [[3,0,3],[L,0,3]], [[0,3,3],[0,L,3]]
+      [[4,4,4],[L,4,4]], [[4,4,4],[4,L,4]], [[4,4,4],[4,4,L]]
     ];
     rays.forEach(function (r) {
       gOpenBox.add(new THREE.Line(
@@ -270,59 +296,63 @@
       ));
     });
 
-    // Muescas grises de referencia para los orbitales 4, 5, ... (sin cubitos ni cajas amarillas)
+    // Muescas de referencia desde (0,0,0): 0..3 interior saturante (dorado) y >= 4 orbitales (gris)
     var maxK = Math.max(5, elem.kMax);
+    var coreTickMat = new THREE.LineBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.8 });
     var notchMat = new THREE.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.9 });
     var notchPts = [];
-    for (var k = 4; k <= maxK; k++) {
-      var d = 0.24;
+    for (var k = 0; k <= maxK; k++) {
+      var m = k <= 3 ? coreTickMat : notchMat;
+      var d = k <= 3 ? 0.16 : 0.24;
       notchPts.push(k, k, k);
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k - d, k, k), new THREE.Vector3(k + d, k, k)]), notchMat));
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, k - d, k), new THREE.Vector3(k, k + d, k)]), notchMat));
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, k, k - d), new THREE.Vector3(k, k, k + d)]), notchMat));
-      // Muescas sobre ejes +X, +Y, +Z
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, -0.15, 0), new THREE.Vector3(k, 0.15, 0)]), notchMat));
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.15, k, 0), new THREE.Vector3(0.15, k, 0)]), notchMat));
-      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -0.15, k), new THREE.Vector3(0, 0.15, k)]), notchMat));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k - d, k, k), new THREE.Vector3(k + d, k, k)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, k - d, k), new THREE.Vector3(k, k + d, k)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, k, k - d), new THREE.Vector3(k, k, k + d)]), m));
+      // Muescas sobre ejes +X, +Y, +Z desde 0
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(k, -0.15, 0), new THREE.Vector3(k, 0.15, 0)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.15, k, 0), new THREE.Vector3(0.15, k, 0)]), m));
+      gOpenBox.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -0.15, k), new THREE.Vector3(0, 0.15, k)]), m));
     }
     var nGeom = new THREE.BufferGeometry();
     nGeom.setAttribute("position", new THREE.Float32BufferAttribute(notchPts, 3));
     gOpenBox.add(new THREE.Points(nGeom, new THREE.PointsMaterial({ color: 0xc4c3bf, size: 0.22 })));
 
-    // Guía diagonal sutil (0,0,0) -> (4,4,4) -> (5,5,5) -> inf
+    // Guía diagonal continua desde el ancla inferior izquierda (0,0,0) -> (3,3,3) -> (4,4,4) -> (5,5,5) -> inf
     gOpenBox.add(new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(maxK + 0.8, maxK + 0.8, maxK + 0.8)]),
-      new THREE.LineBasicMaterial({ color: 0x8a8985, transparent: true, opacity: 0.35 })
+      new THREE.LineBasicMaterial({ color: 0x8a8985, transparent: true, opacity: 0.42 })
     ));
   }
 
   function buildNucleusInCore() {
-    // Protones (rojos) y neutrones (azules) distribuidos entre cualquiera de los 343 sitios internos
-    // del cubo amarillo saturante [-3,3]^3 (priorizando primero el octante +/+/+ [0,3]^3).
-    var sites343 = [];
-    for (var x = -3; x <= 3; x++) {
-      for (var y = -3; y <= 3; y++) {
-        for (var z = -3; z <= 3; z++) {
-          if (x === 0 && y === 0 && z === 0) continue;
-          // No pisar los sitios iniciales de 1s (1,1,1) y (2,2,2)
-          if ((x === 1 && y === 1 && z === 1) || (x === 2 && y === 2 && z === 2)) continue;
-          var inPosHab = (x >= 1 && y >= 1 && z >= 1);
-          var inPos = (x >= 0 && y >= 0 && z >= 0);
+    // Protones (rojos) y neutrones (azules) 100% DENTRO del átomo en +/+/+ (NUNCA x,y,z < 0).
+    // Empieza en (0,0,0), abarca todo [0,3]^3 hacia (3,3,3) y continúa por todos los sitios con algún 3
+    // (min(x,y,z) <= 3: (3,4,3), (3,5,3), (3,6,3), (3,5,5), (3,6,6)...) hasta alojar los A nucleones.
+    var satSites = [];
+    var lim = Math.min(N - 1, Math.max(7, elem.kMax));
+    for (var x = 0; x <= lim; x++) {
+      for (var y = 0; y <= lim; y++) {
+        for (var z = 0; z <= lim; z++) {
+          if (x > 3 && y > 3 && z > 3) continue; // Si no tiene ningún 3 (o <= 3) es orbital, no núcleo
+          if ((x === 1 && y === 1 && z === 1) || (x === 2 && y === 2 && z === 2)) continue; // slots iniciales 1s
+          var inBox03 = (x <= 3 && y <= 3 && z <= 3);
+          var has3 = (x === 3 || y === 3 || z === 3);
+          var tier = (x === 0 && y === 0 && z === 0) ? 0 : (inBox03 ? 1 : (has3 ? 2 : 3));
+          var maxC = Math.max(x, y, z);
           var dist = x * x + y * y + z * z;
-          sites343.push({ p: [x, y, z], tier: inPosHab ? 0 : (inPos ? 1 : 2), dist: dist });
+          satSites.push({ p: [x, y, z], tier: tier, maxC: maxC, dist: dist });
         }
       }
     }
-    sites343.push({ p: [0, 0, 0], tier: 1, dist: 0 });
-    sites343.sort(function (a, b) {
-      return a.tier - b.tier || a.dist - b.dist || a.p[0] - b.p[0];
+    satSites.sort(function (a, b) {
+      return a.tier - b.tier || a.maxC - b.maxC || a.dist - b.dist || a.p[0] - b.p[0] || a.p[1] - b.p[1];
     });
 
     var A = elem.z + elem.n;
     var pCount = elem.z, nCount = elem.n;
     var pPos = [], nPos = [];
-    for (var i = 0; i < A && i < sites343.length; i++) {
-      var pt = sites343[i].p;
+    for (var i = 0; i < A && i < satSites.length; i++) {
+      var pt = satSites[i].p;
       var isP = (i % 2 === 0 && pCount > 0) || nCount === 0;
       if (isP) { pCount--; pPos.push(pt); } else { nCount--; nPos.push(pt); }
     }
@@ -419,7 +449,7 @@
         sc.set(s, s, s);
         m4.compose(pos, q, sc);
         specMesh.setMatrixAt(i, m4);
-        var isSat = coords[3 * i] <= 3 && coords[3 * i + 1] <= 3 && coords[3 * i + 2] <= 3;
+        var isSat = coords[3 * i] <= 3 || coords[3 * i + 1] <= 3 || coords[3 * i + 2] <= 3;
         col.copy(isSat ? cSat : cOpen).lerp(cHot, wn * 0.72);
         specMesh.setColorAt(i, col);
       }
@@ -436,7 +466,7 @@
         pArr[3 * j] = coords[3 * j];
         pArr[3 * j + 1] = coords[3 * j + 1];
         pArr[3 * j + 2] = coords[3 * j + 2];
-        var isSat2 = coords[3 * j] <= 3 && coords[3 * j + 1] <= 3 && coords[3 * j + 2] <= 3;
+        var isSat2 = coords[3 * j] <= 3 || coords[3 * j + 1] <= 3 || coords[3 * j + 2] <= 3;
         col2.copy(isSat2 ? cSat : cOpen).lerp(cHot, wn2 * 0.78);
         cArr[3 * j] = col2.r; cArr[3 * j + 1] = col2.g; cArr[3 * j + 2] = col2.b;
       }
@@ -522,10 +552,10 @@
 
     // Leyenda acotada con scroll
     var fixedItems = [
-      { col: "#ffc400", txt: "Cubo amarillo = Core / Bloch gen. (343 sitios)" },
-      { col: "#f0605f", txt: "Protones (" + elem.z + "p) dentro del core" },
-      { col: "#5b9be6", txt: "Neutrones (" + elem.n + "n) dentro del core" },
-      { col: "#94a3b8", txt: "Muescas grises: orbital 4 (4,4,4), orbital 5 (5,5,5)…" }
+      { col: "#ffc400", txt: "Cubo amarillo = Core / Bloch gen. (0..3 + todo 3 en +/+/+)" },
+      { col: "#f0605f", txt: "Protones (" + elem.z + "p) dentro del átomo en +/+/+" },
+      { col: "#5b9be6", txt: "Neutrones (" + elem.n + "n) dentro del átomo en +/+/+" },
+      { col: "#94a3b8", txt: "Muescas grises: sin 3 → orbital 4 (4,4,4), orbital 5 (5,5,5)…" }
     ];
     fixedItems.forEach(function (it) {
       var d = document.createElement("div");
