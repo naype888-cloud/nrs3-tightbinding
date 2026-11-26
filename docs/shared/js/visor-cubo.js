@@ -328,12 +328,14 @@
   var nucP = [], nucN = [];
   var imP = null, imN = null;
   var nucLineP = null, nucLineN = null;
-  var NUC_TRAIL = 7;
+  var NUC_TRAIL = 50; // Homologado exactamente con MAX_TRAIL = 50 de los electrones
 
   function makeNucParticle(pt) {
-    var hist = [];
-    for (var k = 0; k < NUC_TRAIL; k++) hist.push(pt.slice());
-    return { init: pt.slice(), pos: pt.slice(), vis: new THREE.Vector3(pt[0], pt[1], pt[2]), hist: hist };
+    var hx = new Int16Array(NUC_TRAIL);
+    var hy = new Int16Array(NUC_TRAIL);
+    var hz = new Int16Array(NUC_TRAIL);
+    hx.fill(pt[0]); hy.fill(pt[1]); hz.fill(pt[2]);
+    return { init: pt.slice(), pos: pt.slice(), vis: new THREE.Vector3(pt[0], pt[1], pt[2]), hx: hx, hy: hy, hz: hz, head: 0 };
   }
 
   function createNucTrailLines(particles, colorHex) {
@@ -342,7 +344,7 @@
     var arr = new Float32Array(segs * 6);
     var geom = new THREE.BufferGeometry();
     geom.setAttribute("position", new THREE.BufferAttribute(arr, 3));
-    return new THREE.LineSegments(geom, new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.42 }));
+    return new THREE.LineSegments(geom, new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.62 }));
   }
 
   function syncNucMeshesAndTrails(alpha) {
@@ -360,11 +362,13 @@
         im.setMatrixAt(i, m4);
         if (arr && line.visible) {
           var base = i * stride;
+          var h = p.head;
           for (var s = 0; s < NUC_TRAIL - 1; s++) {
-            var a = p.hist[s], b = p.hist[s + 1];
+            var i0 = (h + 1 + s) % NUC_TRAIL;
+            var i1 = (h + 2 + s) % NUC_TRAIL;
             var off = base + s * 6;
-            arr[off] = a[0]; arr[off + 1] = a[1]; arr[off + 2] = a[2];
-            arr[off + 3] = b[0]; arr[off + 4] = b[1]; arr[off + 5] = b[2];
+            arr[off]     = p.hx[i0]; arr[off + 1] = p.hy[i0]; arr[off + 2] = p.hz[i0];
+            arr[off + 3] = p.hx[i1]; arr[off + 4] = p.hy[i1]; arr[off + 5] = p.hz[i1];
           }
         }
       }
@@ -383,11 +387,11 @@
     // Núcleo y puntos grises en +/+/+: saturación gaussiana en min(x,y,z) <= 3 sin exclusión de Pauli
     if (nx < 0 || ny < 0 || nz < 0 || nx > nucLim || ny > nucLim || nz > nucLim) return;
     if (nx > 3 && ny > 3 && nz > 3) return;
-    // Leve preferencia por permanecer denso cerca del núcleo interior (0..3) sin encerrar las franjas en 3
-    if ((nx > 4 || ny > 4 || nz > 4) && Math.random() < 0.35) return;
+    // Leve sesgo de retorno hacia [0,3]^3 para mantener denso el núcleo sin dejar de poblar las paredes en 3
+    if ((nx > 4 || ny > 4 || nz > 4) && Math.random() < 0.28) return;
     p.pos[0] = nx; p.pos[1] = ny; p.pos[2] = nz;
-    p.hist.shift();
-    p.hist.push([nx, ny, nz]);
+    p.head = (p.head + 1) % NUC_TRAIL;
+    p.hx[p.head] = nx; p.hy[p.head] = ny; p.hz[p.head] = nz;
   }
 
   function buildNucleusInCore() {
@@ -543,11 +547,11 @@
     document.getElementById(id).addEventListener("input", updateOpenCubeSpectrum);
   });
 
-  // ---- Electrones en +/+/+ y motor de hopping discreto (1500 Hz + economía de recursos) ----
+  // ---- Electrones en +/+/+ y motor de hopping discreto (3000 Hz + economía de recursos) ----
   var electronObjs = [];
   var selectedIdx = elem.electrones.length - 1;
   var autoHop = true;
-  var hopHz = 1500;
+  var hopHz = 3000;
   var lastHop = 0;
   var MAX_TRAIL = 50;
 
@@ -759,7 +763,7 @@
         var p = list[i];
         p.pos = p.init.slice();
         p.vis.set(p.init[0], p.init[1], p.init[2]);
-        for (var k = 0; k < NUC_TRAIL; k++) p.hist[k] = p.init.slice();
+        p.hx.fill(p.init[0]); p.hy.fill(p.init[1]); p.hz.fill(p.init[2]); p.head = 0;
       }
     }
     resetNucList(nucP);
@@ -910,7 +914,7 @@
     if (autoHop) {
       var step = 1 / hopHz;
       if (elapsed - lastHop > 0.08) lastHop = elapsed - step;
-      var nSteps = Math.min(36, Math.floor((elapsed - lastHop) / step));
+      var nSteps = Math.min(64, Math.floor((elapsed - lastHop) / step));
       if (nSteps > 0) {
         lastHop += nSteps * step;
         for (var s = 0; s < nSteps; s++) {
