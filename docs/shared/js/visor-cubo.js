@@ -73,12 +73,12 @@
     " · Valencia " + elem.valencia + " · Red " + elem.bravais.nombre;
 
   document.getElementById("core-desc-txt").innerHTML =
-    "El <b>núcleo</b> está <b>dentro del átomo</b> en <code>+/+/+</code>: arranca en <b>(0,0,0)</b> (esquina inferior izquierda), abarca todo <code>(0..3)³</code> hasta <code>(3,3,3)</code> y <b>todo punto con algún 3 satura</b> (<code>mín(x,y,z) ≤ 3</code>: <code>(3,4,3)</code>, <code>(3,5,3)</code>, <code>(3,6,3)</code>, <code>(3,5,5)</code>, <code>(3,6,6)</code>…). Potencial: <code>V(r) ~ −" + elem.z + "/r</code>.";
+    "El <b>núcleo y los puntos grises vacíos (≤ 3)</b> están <b>dentro del átomo</b> en <code>+/+/+</code>: arrancan en <b>(0,0,0)</b>, abarcan <code>(0..3)³</code> y todo punto con un <code>3</code> (<code>mín(x,y,z) ≤ 3</code>). Ahí se <b>satura el gaussiano sin exclusión de Pauli</b> (pueden coincidir protones, neutrones y <code>1s</code>) con hopping a mayor velocidad; potencial <code>V(r) ~ −" + elem.z + "/r</code>.";
 
   document.getElementById("open-desc-txt").innerHTML =
-    "Sin ningún 3 (<code>x,y,z ≥ 4</code>) arranca el 1.º orbital en la <b>primera muesca gris (4,4,4)</b> (umbral <code>N=4</code> PR #2122), más <code>(4,5,4)</code>, <code>(4,5,5)</code>, <b>(5,5,5)</b>… hasta " +
+    "El cubo de colores sin ningún <code>3</code> (<code>x,y,z ≥ 4</code>) arranca en la <b>primera muesca gris (4,4,4)</b> (umbral <code>N=4</code> PR #2122) hasta " +
     (elem.kMax >= 4 ? "<b>(" + elem.kMax + "," + elem.kMax + "," + elem.kMax + ")</b>" : "el borde abierto") +
-    ". <b>1 celda = 1 orbital</b> (PR #2118); vacío <b>90:10 → 1:1</b> (" + freeSitesPos + " celdas orbitales en <code>+/+/+</code>).";
+    ": ahí sí rige la <b>exclusión de Pauli / Slater</b> (1 celda = 1 electrón). Vacío <b>90:10 → 1:1</b> (" + freeSitesPos + " celdas en <code>+/+/+</code>).";
 
   document.getElementById("bravais-link").href = "https://naype888-cloud.github.io/nrs3-cristales/lab/#" + elem.bravais.id;
   document.getElementById("bravais-txt").textContent =
@@ -324,23 +324,84 @@
     ));
   }
 
+  var nucLim = Math.min(N - 1, Math.max(7, elem.kMax));
+  var nucP = [], nucN = [];
+  var imP = null, imN = null;
+  var nucLineP = null, nucLineN = null;
+  var NUC_TRAIL = 7;
+
+  function makeNucParticle(pt) {
+    var hist = [];
+    for (var k = 0; k < NUC_TRAIL; k++) hist.push(pt.slice());
+    return { init: pt.slice(), pos: pt.slice(), vis: new THREE.Vector3(pt[0], pt[1], pt[2]), hist: hist };
+  }
+
+  function createNucTrailLines(particles, colorHex) {
+    if (!particles.length) return null;
+    var segs = particles.length * (NUC_TRAIL - 1);
+    var arr = new Float32Array(segs * 6);
+    var geom = new THREE.BufferGeometry();
+    geom.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+    return new THREE.LineSegments(geom, new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.42 }));
+  }
+
+  function syncNucMeshesAndTrails(alpha) {
+    var m4 = new THREE.Matrix4();
+    function updateGroup(list, im, line) {
+      if (!list.length || !im) return;
+      var arr = line ? line.geometry.attributes.position.array : null;
+      var stride = (NUC_TRAIL - 1) * 6;
+      for (var i = 0; i < list.length; i++) {
+        var p = list[i];
+        p.vis.x += (p.pos[0] - p.vis.x) * alpha;
+        p.vis.y += (p.pos[1] - p.vis.y) * alpha;
+        p.vis.z += (p.pos[2] - p.vis.z) * alpha;
+        m4.setPosition(p.vis.x, p.vis.y, p.vis.z);
+        im.setMatrixAt(i, m4);
+        if (arr && line.visible) {
+          var base = i * stride;
+          for (var s = 0; s < NUC_TRAIL - 1; s++) {
+            var a = p.hist[s], b = p.hist[s + 1];
+            var off = base + s * 6;
+            arr[off] = a[0]; arr[off + 1] = a[1]; arr[off + 2] = a[2];
+            arr[off + 3] = b[0]; arr[off + 4] = b[1]; arr[off + 5] = b[2];
+          }
+        }
+      }
+      im.instanceMatrix.needsUpdate = true;
+      if (line && line.visible) line.geometry.attributes.position.needsUpdate = true;
+    }
+    updateGroup(nucP, imP, nucLineP);
+    updateGroup(nucN, imN, nucLineN);
+  }
+
+  function stepNucleon(p) {
+    var d = DIRS[Math.floor(Math.random() * DIRS.length)];
+    var nx = p.pos[0] + (d[0] === 0 ? d[1] : 0);
+    var ny = p.pos[1] + (d[0] === 1 ? d[1] : 0);
+    var nz = p.pos[2] + (d[0] === 2 ? d[1] : 0);
+    // Núcleo y puntos grises en +/+/+: saturación gaussiana en min(x,y,z) <= 3 sin exclusión de Pauli
+    if (nx < 0 || ny < 0 || nz < 0 || nx > nucLim || ny > nucLim || nz > nucLim) return;
+    if (nx > 3 && ny > 3 && nz > 3) return;
+    // Leve preferencia por permanecer denso cerca del núcleo interior (0..3) sin encerrar las franjas en 3
+    if ((nx > 4 || ny > 4 || nz > 4) && Math.random() < 0.35) return;
+    p.pos[0] = nx; p.pos[1] = ny; p.pos[2] = nz;
+    p.hist.shift();
+    p.hist.push([nx, ny, nz]);
+  }
+
   function buildNucleusInCore() {
-    // Protones (rojos) y neutrones (azules) 100% DENTRO del átomo en +/+/+ (NUNCA x,y,z < 0).
-    // Empieza en (0,0,0), abarca todo [0,3]^3 hacia (3,3,3) y continúa por todos los sitios con algún 3
-    // (min(x,y,z) <= 3: (3,4,3), (3,5,3), (3,6,3), (3,5,5), (3,6,6)...) hasta alojar los A nucleones.
+    // Protones (rojos) y neutrones (azules) dinámicos 100% DENTRO del átomo en +/+/+ (min(x,y,z) <= 3):
+    // pueden compartir orbitales/celdas porque el core satura el gaussiano (sin exclusión de Pauli).
     var satSites = [];
-    var lim = Math.min(N - 1, Math.max(7, elem.kMax));
-    for (var x = 0; x <= lim; x++) {
-      for (var y = 0; y <= lim; y++) {
-        for (var z = 0; z <= lim; z++) {
-          if (x > 3 && y > 3 && z > 3) continue; // Si no tiene ningún 3 (o <= 3) es orbital, no núcleo
-          if ((x === 1 && y === 1 && z === 1) || (x === 2 && y === 2 && z === 2)) continue; // slots iniciales 1s
+    for (var x = 0; x <= nucLim; x++) {
+      for (var y = 0; y <= nucLim; y++) {
+        for (var z = 0; z <= nucLim; z++) {
+          if (x > 3 && y > 3 && z > 3) continue;
           var inBox03 = (x <= 3 && y <= 3 && z <= 3);
           var has3 = (x === 3 || y === 3 || z === 3);
           var tier = (x === 0 && y === 0 && z === 0) ? 0 : (inBox03 ? 1 : (has3 ? 2 : 3));
-          var maxC = Math.max(x, y, z);
-          var dist = x * x + y * y + z * z;
-          satSites.push({ p: [x, y, z], tier: tier, maxC: maxC, dist: dist });
+          satSites.push({ p: [x, y, z], tier: tier, maxC: Math.max(x, y, z), dist: x * x + y * y + z * z });
         }
       }
     }
@@ -350,26 +411,26 @@
 
     var A = elem.z + elem.n;
     var pCount = elem.z, nCount = elem.n;
-    var pPos = [], nPos = [];
-    for (var i = 0; i < A && i < satSites.length; i++) {
-      var pt = satSites[i].p;
+    for (var i = 0; i < A; i++) {
+      var pt = satSites[i % satSites.length].p;
       var isP = (i % 2 === 0 && pCount > 0) || nCount === 0;
-      if (isP) { pCount--; pPos.push(pt); } else { nCount--; nPos.push(pt); }
+      if (isP) { pCount--; nucP.push(makeNucParticle(pt)); }
+      else { nCount--; nucN.push(makeNucParticle(pt)); }
     }
     var gP = new THREE.SphereGeometry(0.13, 10, 10);
-    var m4 = new THREE.Matrix4();
-    if (pPos.length) {
-      var imP = new THREE.InstancedMesh(gP, new THREE.MeshBasicMaterial({ color: 0xf0605f }), pPos.length);
-      pPos.forEach(function (pt, idx) { m4.setPosition(pt[0], pt[1], pt[2]); imP.setMatrixAt(idx, m4); });
-      imP.instanceMatrix.needsUpdate = true;
+    if (nucP.length) {
+      imP = new THREE.InstancedMesh(gP, new THREE.MeshBasicMaterial({ color: 0xf0605f }), nucP.length);
       gNucleus.add(imP);
+      nucLineP = createNucTrailLines(nucP, 0xf0605f);
+      gNucleus.add(nucLineP);
     }
-    if (nPos.length) {
-      var imN = new THREE.InstancedMesh(gP, new THREE.MeshBasicMaterial({ color: 0x5b9be6 }), nPos.length);
-      nPos.forEach(function (pt, idx) { m4.setPosition(pt[0], pt[1], pt[2]); imN.setMatrixAt(idx, m4); });
-      imN.instanceMatrix.needsUpdate = true;
+    if (nucN.length) {
+      imN = new THREE.InstancedMesh(gP, new THREE.MeshBasicMaterial({ color: 0x5b9be6 }), nucN.length);
       gNucleus.add(imN);
+      nucLineN = createNucTrailLines(nucN, 0x5b9be6);
+      gNucleus.add(nucLineN);
     }
+    syncNucMeshesAndTrails(1.0);
   }
 
   function buildFluctuationOctants() {
@@ -482,11 +543,11 @@
     document.getElementById(id).addEventListener("input", updateOpenCubeSpectrum);
   });
 
-  // ---- Electrones en +/+/+ y motor de hopping discreto ---------------------
+  // ---- Electrones en +/+/+ y motor de hopping discreto (1500 Hz + economía de recursos) ----
   var electronObjs = [];
   var selectedIdx = elem.electrones.length - 1;
   var autoHop = true;
-  var hopHz = 120;
+  var hopHz = 1500;
   var lastHop = 0;
   var MAX_TRAIL = 50;
 
@@ -494,10 +555,26 @@
   var legListEl = document.getElementById("legend-list");
   var legCountEl = document.getElementById("legend-count");
 
+  function syncElectronTrailBuffer(obj) {
+    var attr = obj.trail.geometry.attributes.position;
+    var arr = attr.array;
+    var nPts = obj.history.length;
+    for (var i = 0; i < nPts; i++) {
+      var pt = obj.history[i];
+      arr[3 * i] = pt[0];
+      arr[3 * i + 1] = pt[1];
+      arr[3 * i + 2] = pt[2];
+    }
+    obj.trail.geometry.setDrawRange(0, nPts);
+    attr.needsUpdate = true;
+    obj.dirtyTrail = false;
+  }
+
   function buildElectronsAndHUD() {
     elecListEl.innerHTML = "";
     legListEl.innerHTML = "";
     var legendGroups = {};
+    var eSphereGeom = new THREE.SphereGeometry(0.15, 10, 10);
 
     elem.electrones.forEach(function (e, idx) {
       var id = e[0], orb = e[1], spin = e[2], kNivel = e[3], pos = e[4], hex = e[5], isCore = e[6];
@@ -505,7 +582,7 @@
       var sub = isCore ? "1s" : orb.replace(/(px|py|pz|dxy|dyz|dxz|dx2y2|dz2|fz3|fxz2|fyz2|fxyz|fzxy|fx3|fy3)$/, "");
       var grp = new THREE.Group();
       var sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(0.15, 12, 12),
+        eSphereGeom,
         new THREE.MeshBasicMaterial({ color: colorNum })
       );
       grp.add(sphere);
@@ -513,7 +590,11 @@
       gElectrons.add(grp);
 
       var trailMat = new THREE.LineBasicMaterial({ color: colorNum, transparent: true, opacity: 0.72 });
-      var trailGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(pos[0], pos[1], pos[2])]);
+      var trailArr = new Float32Array(MAX_TRAIL * 3);
+      trailArr[0] = pos[0]; trailArr[1] = pos[1]; trailArr[2] = pos[2];
+      var trailGeom = new THREE.BufferGeometry();
+      trailGeom.setAttribute("position", new THREE.BufferAttribute(trailArr, 3));
+      trailGeom.setDrawRange(0, 1);
       var trail = new THREE.Line(trailGeom, trailMat);
       gElectrons.add(trail);
 
@@ -521,7 +602,7 @@
         id: id, orb: orb, spin: spin, sub: sub, kNivel: kNivel,
         hex: "#" + hex, isCore: isCore, active: true,
         initPos: pos.slice(), pos: pos.slice(), target: pos.slice(),
-        history: [pos.slice()], group: grp, trail: trail
+        history: [pos.slice()], group: grp, trail: trail, dirtyTrail: false
       });
 
       // Fila en lista
@@ -594,52 +675,68 @@
     updateStats();
   }
 
-  function stepElectron(idx, axis, delta) {
+  function stepElectron(idx, axis, delta, deferTrail) {
     var obj = electronObjs[idx];
     if (!obj || !obj.active) return false;
-    var next = obj.pos.slice();
-    next[axis] += delta;
-    // Fronteras estrictas en +/+/+:
-    // core: [1, 3]^3; orbitales no saturantes: [4, N-1]^3
-    var lo = obj.isCore ? 1 : 4;
-    var hi = obj.isCore ? 3 : (N - 1);
-    if (next[0] < lo || next[1] < lo || next[2] < lo) return false;
-    if (next[0] > hi || next[1] > hi || next[2] > hi) return false;
-
-    // Exclusión espacial de Pauli (1 celda = 1 electrón activo)
-    for (var i = 0; i < electronObjs.length; i++) {
-      if (i === idx || !electronObjs[i].active) continue;
-      var p = electronObjs[i].pos;
-      if (p[0] === next[0] && p[1] === next[1] && p[2] === next[2]) return false;
+    var nx = obj.pos[0] + (axis === 0 ? delta : 0);
+    var ny = obj.pos[1] + (axis === 1 ? delta : 0);
+    var nz = obj.pos[2] + (axis === 2 ? delta : 0);
+    if (obj.isCore) {
+      // Electrones saturados (core <= 3): habitan todos los puntos <= 3 en +/+/+ (incluyendo puntos grises 0)
+      // SIN restricción de exclusión de Pauli porque el core satura el gaussiano.
+      if (nx < 0 || ny < 0 || nz < 0 || nx > 3 || ny > 3 || nz > 3) return false;
+    } else {
+      // Cubo de colores (orbitales >= 4 sin ningún 3): exclusión estricta de Pauli / Slater (1 celda = 1 electrón)
+      if (nx < 4 || ny < 4 || nz < 4 || nx >= N || ny >= N || nz >= N) return false;
+      for (var i = 0; i < electronObjs.length; i++) {
+        if (i === idx || !electronObjs[i].active || electronObjs[i].isCore) continue;
+        var p = electronObjs[i].pos;
+        if (p[0] === nx && p[1] === ny && p[2] === nz) return false;
+      }
     }
 
-    obj.pos = next.slice();
-    obj.target = next.slice();
-    obj.history.push(next.slice());
+    obj.pos[0] = nx; obj.pos[1] = ny; obj.pos[2] = nz;
+    obj.target[0] = nx; obj.target[1] = ny; obj.target[2] = nz;
+    obj.history.push([nx, ny, nz]);
     if (obj.history.length > MAX_TRAIL) obj.history.shift();
-    obj.trail.geometry.setFromPoints(obj.history.map(function (pt) { return new THREE.Vector3(pt[0], pt[1], pt[2]); }));
-    var lbl = document.getElementById("epos-" + idx);
-    if (lbl) lbl.textContent = "(" + next.join(",") + ")";
+    if (deferTrail) {
+      obj.dirtyTrail = true;
+    } else {
+      syncElectronTrailBuffer(obj);
+      var lbl = document.getElementById("epos-" + idx);
+      if (lbl) lbl.textContent = "(" + nx + "," + ny + "," + nz + ")";
+    }
     return true;
   }
 
   var DIRS = [[0,1],[0,-1],[1,1],[1,-1],[2,1],[2,-1]];
-  function randomHopBatch() {
+  function randomHopBatch(deferTrail) {
     var active = [];
     for (var i = 0; i < electronObjs.length; i++) if (electronObjs[i].active) active.push(i);
     if (!active.length) return;
-    var batch = Math.max(1, Math.min(12, Math.ceil(active.length / 4)));
+    var batch = Math.max(1, Math.min(8, Math.ceil(active.length / 6)));
     for (var b = 0; b < batch; b++) {
       var idx = active[Math.floor(Math.random() * active.length)];
       var d = DIRS[Math.floor(Math.random() * DIRS.length)];
-      stepElectron(idx, d[0], d[1]);
+      stepElectron(idx, d[0], d[1], deferTrail);
+    }
+  }
+
+  function randomNucleusHopBatch() {
+    var tot = nucP.length + nucN.length;
+    if (!tot) return;
+    // Mayor velocidad en el núcleo saturante (protones + neutrones saltan ~2.5x más rápido)
+    var batch = Math.max(2, Math.min(20, Math.ceil(tot / 8)));
+    for (var b = 0; b < batch; b++) {
+      var r = Math.floor(Math.random() * tot);
+      stepNucleon(r < nucP.length ? nucP[r] : nucN[r - nucP.length]);
     }
   }
 
   document.querySelectorAll("[data-hop]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var parts = btn.getAttribute("data-hop").split(",").map(Number);
-      if (stepElectron(selectedIdx, parts[0], parts[1])) updateStats();
+      if (stepElectron(selectedIdx, parts[0], parts[1], false)) updateStats();
     });
   });
 
@@ -653,10 +750,21 @@
       obj.target = obj.initPos.slice();
       obj.history = [obj.initPos.slice()];
       obj.group.position.set(obj.pos[0], obj.pos[1], obj.pos[2]);
-      obj.trail.geometry.setFromPoints([new THREE.Vector3(obj.pos[0], obj.pos[1], obj.pos[2])]);
+      syncElectronTrailBuffer(obj);
       var lbl = document.getElementById("epos-" + idx);
       if (lbl) lbl.textContent = "(" + obj.pos.join(",") + ")";
     });
+    function resetNucList(list) {
+      for (var i = 0; i < list.length; i++) {
+        var p = list[i];
+        p.pos = p.init.slice();
+        p.vis.set(p.init[0], p.init[1], p.init[2]);
+        for (var k = 0; k < NUC_TRAIL; k++) p.hist[k] = p.init.slice();
+      }
+    }
+    resetNucList(nucP);
+    resetNucList(nucN);
+    syncNucMeshesAndTrails(1.0);
     updateStats();
   });
   document.getElementById("sl-speed").addEventListener("input", function (ev) {
@@ -708,24 +816,25 @@
 
   function updateStats() {
     var active = electronObjs.filter(function (o) { return o.active; });
+    var orbActive = active.filter(function (o) { return !o.isCore; });
     document.getElementById("stat-elec").textContent = active.length + " / " + elem.z;
     var minD = Infinity;
-    for (var i = 0; i < active.length; i++) {
-      for (var j = i + 1; j < active.length; j++) {
-        var a = active[i].pos, b = active[j].pos;
+    for (var i = 0; i < orbActive.length; i++) {
+      for (var j = i + 1; j < orbActive.length; j++) {
+        var a = orbActive[i].pos, b = orbActive[j].pos;
         var d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
         if (d < minD) minD = d;
       }
     }
     var sel = electronObjs[selectedIdx];
     var rNuc = sel ? Math.hypot(sel.pos[0], sel.pos[1], sel.pos[2]) : 0;
-    var minTxt = active.length < 2 ? "— (" + active.length + " electrón activo)" : (minD.toFixed(3) + " ≥ 1");
+    var minTxt = orbActive.length < 2 ? "Core satura (≤ 3)" : (minD.toFixed(3) + " ≥ 1");
     document.getElementById("stat-dmin").textContent = minTxt;
     document.getElementById("metric-readout").innerHTML =
       "Electrón seleccionado: <b>e" + sel.id + " (" + sel.orb + ")</b> en <code>(" + sel.pos.join(", ") + ")</code><br>" +
       "Distancia al origen (0,0,0): <span class='c-blue'>" + rNuc.toFixed(3) + "</span> celdas (L₁ = " +
       (sel.pos[0] + sel.pos[1] + sel.pos[2]) + " pasos)<br>" +
-      "Distancia mínima e⁻–e⁻: <span class='c-warm'>" + minTxt + "</span>";
+      "Pauli en orbitales ≥ 4: <span class='c-warm'>" + minTxt + "</span> (core ≤ 3 satura)";
   }
 
   // ---- Capas y vistas de cámara desde (0,0,0) -> +/+/+ ---------------------
@@ -759,6 +868,8 @@
     gFluct.visible = document.getElementById("tog-fluct").checked;
     var tr = document.getElementById("tog-trails").checked;
     electronObjs.forEach(function (o) { o.trail.visible = tr && o.active; });
+    if (nucLineP) nucLineP.visible = tr;
+    if (nucLineN) nucLineN.visible = tr;
   }
   ["tog-core", "tog-open", "tog-spec", "tog-axes", "tog-zero", "tog-nuc", "tog-fluct", "tog-trails"].forEach(function (id) {
     document.getElementById(id).addEventListener("change", syncLayers);
@@ -791,30 +902,42 @@
 
   var clock = new THREE.Clock();
   var lastDomSync = 0;
+  var tmpVec = new THREE.Vector3();
   function animate() {
     requestAnimationFrame(animate);
     var dt = clock.getDelta();
     var elapsed = clock.getElapsedTime();
     if (autoHop) {
       var step = 1 / hopHz;
-      if (elapsed - lastHop > 0.1) lastHop = elapsed - step;
-      var loops = 0;
-      var changed = false;
-      while (elapsed - lastHop >= step && loops < 3) {
-        lastHop += step;
-        loops++;
-        randomHopBatch();
-        changed = true;
-      }
-      if (changed && elapsed - lastDomSync > 0.12) {
-        lastDomSync = elapsed;
-        updateStats();
+      if (elapsed - lastHop > 0.08) lastHop = elapsed - step;
+      var nSteps = Math.min(36, Math.floor((elapsed - lastHop) / step));
+      if (nSteps > 0) {
+        lastHop += nSteps * step;
+        for (var s = 0; s < nSteps; s++) {
+          randomHopBatch(true);
+          randomNucleusHopBatch();
+        }
+        // Sincronizar geometrías de estelas una sola vez por frame (cero GC)
+        for (var i = 0; i < electronObjs.length; i++) {
+          if (electronObjs[i].dirtyTrail) syncElectronTrailBuffer(electronObjs[i]);
+        }
+        if (elapsed - lastDomSync > 0.14) {
+          lastDomSync = elapsed;
+          for (var j = 0; j < electronObjs.length; j++) {
+            var lbl = document.getElementById("epos-" + j);
+            if (lbl) lbl.textContent = "(" + electronObjs[j].pos.join(",") + ")";
+          }
+          updateStats();
+        }
       }
     }
-    electronObjs.forEach(function (o) {
-      if (!o.active) return;
-      o.group.position.lerp(new THREE.Vector3(o.target[0], o.target[1], o.target[2]), 0.32);
-    });
+    syncNucMeshesAndTrails(0.55);
+    for (var k = 0; k < electronObjs.length; k++) {
+      var o = electronObjs[k];
+      if (!o.active) continue;
+      tmpVec.set(o.target[0], o.target[1], o.target[2]);
+      o.group.position.lerp(tmpVec, 0.5);
+    }
     bScene.rotation.y += dt * 0.35;
     controls.update();
     renderer.render(scene, camera);

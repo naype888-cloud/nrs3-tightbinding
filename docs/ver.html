@@ -7,9 +7,9 @@
 <meta name="theme-color" content="#06080b">
 <link rel="icon" href="media/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="media/fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<script src="shared/js/theme.js?v=20261125" data-toggle></script>
-<link rel="stylesheet" href="shared/css/tokens.css?v=20261125">
-<link rel="stylesheet" href="shared/css/visor.css?v=20261125">
+<script src="shared/js/theme.js?v=20261125c" data-toggle></script>
+<link rel="stylesheet" href="shared/css/tokens.css?v=20261125c">
+<link rel="stylesheet" href="shared/css/visor.css?v=20261125c">
 </head>
 <body class="visor-app">
 <header class="barra">
@@ -72,7 +72,7 @@
           <div class="tog-row"><label><span class="dot" style="background:var(--warm)"></span>Espectro Open Cube |ψ|²</label><input type="checkbox" id="tog-spec" checked></div>
           <div class="tog-row"><label><span class="dot" style="background:var(--green)"></span>Ejes +X,+Y,+Z y planos 0=0</label><input type="checkbox" id="tog-axes" checked></div>
           <div class="tog-row"><label><span class="dot" style="background:var(--muted)"></span>Rejilla 0=0 (conmutación)</label><input type="checkbox" id="tog-zero" checked></div>
-          <div class="tog-row"><label><span class="dot" style="background:var(--red)"></span>Protones y neutrones en +/+/+ (≤ 3)</label><input type="checkbox" id="tog-nuc" checked></div>
+          <div class="tog-row"><label><span class="dot" style="background:var(--red)"></span>Núcleo dinámico en +/+/+ (≤ 3, mayor Hz)</label><input type="checkbox" id="tog-nuc" checked></div>
           <div class="tog-row"><label><span class="dot" style="background:var(--warm)"></span>Estelas de salto (hopping)</label><input type="checkbox" id="tog-trails" checked></div>
           <div class="tog-row"><label><span class="dot" style="background:var(--muted)"></span>7 octantes de fluctuación (tenues)</label><input type="checkbox" id="tog-fluct"></div>
         </div>
@@ -104,8 +104,8 @@
             <button class="vaction" id="btn-hop-reset" type="button">↺ Reset</button>
           </div>
           <div class="slide-row">
-            <div class="slide-head"><span>Frecuencia</span><span id="val-speed">120 Hz</span></div>
-            <input type="range" id="sl-speed" min="1" max="350" value="120">
+            <div class="slide-head"><span>Frecuencia</span><span id="val-speed">1500 Hz</span></div>
+            <input type="range" id="sl-speed" min="1" max="3000" value="1500">
           </div>
           <div class="btn-row" id="layer-filter-btns" style="margin-top:8px;"></div>
         </div>
@@ -175,8 +175,8 @@
   <div class="bstat"><div class="k">Electrones Activos</div><div class="v" id="stat-elec">—</div></div>
 </footer>
 
-<script src="shared/js/three.min.js?v=20261125"></script>
-<script src="data/elementos.js?v=20261125"></script>
-<script src="shared/js/visor-cubo.js?v=20261125"></script>
+<script src="shared/js/three.min.js?v=20261125c"></script>
+<script src="data/elementos.js?v=20261125c"></script>
+<script src="shared/js/visor-cubo.js?v=20261125c"></script>
 </body>
 </html>
