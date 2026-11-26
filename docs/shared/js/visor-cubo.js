@@ -764,6 +764,7 @@
     ev.target.textContent = autoHop ? "⏸ Pausar" : "▶ Reanudar";
   });
   document.getElementById("btn-hop-reset").addEventListener("click", function () {
+    occReset();
     electronObjs.forEach(function (obj, idx) {
       obj.pos = obj.initPos.slice();
       obj.target = obj.initPos.slice();
@@ -854,6 +855,93 @@
       "Distancia al origen (0,0,0): <span class='c-blue'>" + rNuc.toFixed(3) + "</span> celdas (L₁ = " +
       (sel.pos[0] + sel.pos[1] + sel.pos[2]) + " pasos)<br>" +
       "Pauli en orbitales ≥ 4: <span class='c-warm'>" + minTxt + "</span> (core ≤ 3 satura)";
+    updateOccReadout();
+  }
+
+  // ---- Ocupación promediada en el tiempo (límite de alta frecuencia) -----------
+  // Cuenta, por celda, en cuántos pasos de hopping estuvo ocupada. Medida de ESTA animación:
+  // "fracción de celdas aún no ocupadas en la ventana" (no una prueba de solidez). Tiende a 0
+  // al subir la frecuencia o la ventana. Core: bloque saturado (0..3)^3 (electrones y nucleones);
+  // Open Cube: celdas con x,y,z >= 4 (electrones, 1 celda = 1 electrón).
+  var OCC_M = Math.max(0, N - 4);
+  var OCC_OPEN = OCC_M * OCC_M * OCC_M;
+  var occCore = new Uint32Array(64), stampCore = new Uint32Array(64);
+  var occOpen = new Uint32Array(OCC_OPEN), stampOpen = new Uint32Array(OCC_OPEN);
+  var occTicks = 0;
+  var gOcc = new THREE.Group();
+  gOcc.visible = false;
+  scene.add(gOcc);
+  var occColors = new Float32Array((64 + OCC_OPEN) * 3);
+  (function buildOccPoints() {
+    var pos = new Float32Array((64 + OCC_OPEN) * 3), n = 0, x, y, z;
+    for (z = 0; z < 4; z++) for (y = 0; y < 4; y++) for (x = 0; x < 4; x++) {
+      pos[n++] = W(x); pos[n++] = W(y); pos[n++] = W(z);
+    }
+    for (z = 0; z < OCC_M; z++) for (y = 0; y < OCC_M; y++) for (x = 0; x < OCC_M; x++) {
+      pos[n++] = W(x + 4); pos[n++] = W(y + 4); pos[n++] = W(z + 4);
+    }
+    var g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setAttribute("color", new THREE.BufferAttribute(occColors, 3));
+    gOcc.add(new THREE.Points(g, new THREE.PointsMaterial({
+      size: 0.46, vertexColors: true, transparent: true, opacity: 0.92,
+      depthWrite: false, blending: THREE.AdditiveBlending
+    })));
+  })();
+
+  function occMark(p) {
+    var x = p[0], y = p[1], z = p[2], c;
+    if (x >= 0 && y >= 0 && z >= 0 && x <= 3 && y <= 3 && z <= 3) {
+      c = x + 4 * (y + 4 * z);
+      if (stampCore[c] !== occTicks) { stampCore[c] = occTicks; occCore[c]++; }
+    } else if (OCC_M > 0 && x >= 4 && y >= 4 && z >= 4 && x < N && y < N && z < N) {
+      c = (x - 4) + OCC_M * ((y - 4) + OCC_M * (z - 4));
+      if (stampOpen[c] !== occTicks) { stampOpen[c] = occTicks; occOpen[c]++; }
+    }
+  }
+  function sampleOccupancy() {
+    occTicks++;
+    var i;
+    for (i = 0; i < electronObjs.length; i++) if (electronObjs[i].active) occMark(electronObjs[i].pos);
+    for (i = 0; i < nucP.length; i++) occMark(nucP[i].pos);
+    for (i = 0; i < nucN.length; i++) occMark(nucN[i].pos);
+  }
+  function occReset() {
+    occCore.fill(0); stampCore.fill(0);
+    occOpen.fill(0); stampOpen.fill(0);
+    occTicks = 0;
+  }
+  function occCovered(arr) {
+    var c = 0;
+    for (var i = 0; i < arr.length; i++) if (arr[i] > 0) c++;
+    return c;
+  }
+  function updateOccColors() {
+    var maxOcc = 1, i, v, o = 0;
+    for (i = 0; i < 64; i++) if (occCore[i] > maxOcc) maxOcc = occCore[i];
+    for (i = 0; i < OCC_OPEN; i++) if (occOpen[i] > maxOcc) maxOcc = occOpen[i];
+    for (i = 0; i < 64; i++, o += 3) {
+      v = occCore[i] > 0 ? 0.28 + 0.72 * Math.sqrt(occCore[i] / maxOcc) : 0;
+      occColors[o] = v; occColors[o + 1] = 0.77 * v; occColors[o + 2] = 0;
+    }
+    for (i = 0; i < OCC_OPEN; i++, o += 3) {
+      v = occOpen[i] > 0 ? 0.28 + 0.72 * Math.sqrt(occOpen[i] / maxOcc) : 0;
+      occColors[o] = 0.35 * v; occColors[o + 1] = 0.8 * v; occColors[o + 2] = v;
+    }
+    gOcc.children[0].geometry.attributes.color.needsUpdate = true;
+  }
+  function updateOccReadout() {
+    var el = document.getElementById("occ-readout");
+    if (!el) return;
+    var cc = occCovered(occCore), co = occCovered(occOpen);
+    var vacC = occTicks ? 100 * (1 - cc / 64) : 100;
+    var vacO = OCC_OPEN ? (occTicks ? 100 * (1 - co / OCC_OPEN) : 100) : null;
+    el.innerHTML =
+      "Ventana: <b>" + occTicks + "</b> pasos (≈ " + (occTicks / hopHz).toFixed(2) + " s a " + hopHz + " Hz)<br>" +
+      "Core (0..3)³: " + cc + " / 64 celdas ocupadas alguna vez → vacías <b>" + vacC.toFixed(1) + " %</b><br>" +
+      (vacO === null ? "" : "Orbitales ≥ 4: " + co + " / " + OCC_OPEN + " celdas → vacías <b>" + vacO.toFixed(1) + " %</b><br>") +
+      "<span style='color:var(--muted)'>La probabilidad de encontrar vacío en una celda llena tiende a 0 al subir la frecuencia o la ventana. Es una medida de esta animación, no una prueba de solidez.</span>";
+    if (gOcc.visible) updateOccColors();
   }
 
   // ---- Capas y vistas de cámara desde (0,0,0) -> +/+/+ ---------------------
@@ -885,12 +973,14 @@
     gZeroPlanes.visible = document.getElementById("tog-zero").checked;
     gNucleus.visible = document.getElementById("tog-nuc").checked;
     gFluct.visible = document.getElementById("tog-fluct").checked;
-    var tr = document.getElementById("tog-trails").checked;
+    gOcc.visible = document.getElementById("tog-occ").checked;
+    if (gOcc.visible) updateOccColors();
+    var tr =document.getElementById("tog-trails").checked;
     electronObjs.forEach(function (o) { o.trail.visible = tr && o.active; });
     if (nucLineP) nucLineP.visible = tr;
     if (nucLineN) nucLineN.visible = tr;
   }
-  ["tog-core", "tog-open", "tog-spec", "tog-axes", "tog-zero", "tog-nuc", "tog-fluct", "tog-trails"].forEach(function (id) {
+  ["tog-core", "tog-open", "tog-spec", "tog-axes", "tog-zero", "tog-nuc", "tog-fluct", "tog-occ", "tog-trails"].forEach(function (id) {
     document.getElementById(id).addEventListener("change", syncLayers);
   });
 
@@ -935,6 +1025,7 @@
         for (var s = 0; s < nSteps; s++) {
           randomHopBatch(true);
           randomNucleusHopBatch();
+          sampleOccupancy();
         }
         // Sincronizar geometrías de estelas una sola vez por frame (cero GC)
         for (var i = 0; i < electronObjs.length; i++) {
