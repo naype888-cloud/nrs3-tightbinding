@@ -2,7 +2,8 @@
 
 <div align="center">
 
-# RS<sup>N</sup>³ · La chaîne de liaisons fortes et le cube ouvert
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/titre_tightbinding.png"><img src="assets/claro/titre_tightbinding.png" alt="RS^N³ · La chaîne de liaisons fortes et le cube ouvert" width="860"></picture>
+**"RS<sup>N</sup>³ · La chaîne de liaisons fortes et le cube ouvert"**
 ### De la chaîne périodique de Physlib au cube ouvert : bords ouverts, saturation de Robertson–Schrödinger en N = 2, 3 et borne de Szegő — et la table périodique dessinée sur ℤ³
 
 **Eduardo Nava Hernández**  
