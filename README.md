@@ -17,7 +17,7 @@
 <br>
 
 <a href="https://naype888-cloud.github.io/nrs3-tightbinding/">
-  <img src="docs/media/clip.gif" alt="La table périodique de 118 éléments ; un clic ouvre le modèle 3D du fer, de l’uranium, de l’hydrogène et de l’oganesson" width="860">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="docs/media/oscuro/clip.gif"><img src="docs/media/claro/clip.gif" alt="Modèles 3D discrets sur ℤ³ (Lutétium Z = 71, Europium Z = 63, Praséodyme Z = 59) ; un clic ouvre la table périodique des 118 éléments" width="860"></picture>
 </a>
 
 <p>
